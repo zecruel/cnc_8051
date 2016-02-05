@@ -3,7 +3,7 @@ import math		#importa as funcoes matematicas
 import re
 import ponto
 
-vel_max = 2000
+vel_max = 20
 class Gcode:
 	def __init__(self):
 		self.pre_x = 0.0
@@ -65,7 +65,7 @@ class Gcode:
 	#--------- Rotina de interpretação do arquivo Gcode -------------------------
 	def interpreta(self):
 		comando = 200 #um inteiro que nao representa nenhum comando
-		inf = 4e-10	#um nimero infinitesimal, para evitar a divisao por zero
+		inf = 4e-10	#um numero infinitesimal, para evitar a divisao por zero
 		self.lista = []
 		flag = 0
 		raio = 0

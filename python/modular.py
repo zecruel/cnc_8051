@@ -1,17 +1,17 @@
 # -*- coding: cp1252 -*-
-#from Tkinter import *
-import tkFileDialog
-import tkMessageBox
-from math import *		#importa as funcoes matematicas
-import copy
-import re
-import time
 import threading
 import ezeq_maq.gcode
 import ezeq_maq.render
 import ezeq_maq.gui
-#from ezeq_maq.bmp import*
 from ezeq_maq.ponto import*
+
+#-- debugando------------------------
+import logging
+logging.basicConfig(filename='log_filename.txt',
+			level=logging.DEBUG,
+			format='%(asctime)s - %(levelname)s - %(message)s')
+#logging.debug('This is a log message.')
+#-----------------------------------------------------
 
 def background(parar,trava):
 	global contador
@@ -110,7 +110,7 @@ figura = ezeq_maq.render.bitmap(400,400,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
-janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo))
+janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador))
 
 parar = threading.Event()
 trava = threading.RLock()

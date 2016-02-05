@@ -12,8 +12,8 @@ class wireframe:
 		self.rot_z = 0
 		
 		# velocidades
-		self.v_max = 2000
-		self.v_min = 10
+		self.v_max = 20
+		self.v_min = 2
 		
 		# ponto de observacao para calcular a projecao no plano 2D
 		self.olho_x = 0.0

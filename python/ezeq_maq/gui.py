@@ -47,6 +47,14 @@ class Janela(threading.Thread):
 		self.photo = ''#PhotoImage(data= Imagem)
 		#------------------------------------------------------------
 		
+		self.start()
+	
+	def sai(self):
+		self.raiz.quit()
+
+	def run(self):
+		''' Modifica o metodo run da classe threading'''
+		
 		# constroi a GUI tk normalmente
 		self.raiz = tk.Tk()
 		self.raiz.protocol("WM_DELETE_WINDOW", self.sai)
@@ -168,12 +176,7 @@ class Janela(threading.Thread):
 		self.e.grid(row=4, column=0)
 		self.e.delete(0, tk.END)
 		self.e.insert(0, "a default value")
-	
-	def sai(self):
-		self.raiz.quit()
-
-	def run(self):
-		''' Modifica o metodo run da classe threading'''
+		
 		self.raiz.mainloop()	#entra no mainloop da Tk
 	
 	# -----------------------------------------

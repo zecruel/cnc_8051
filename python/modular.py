@@ -115,7 +115,7 @@ janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador))
 parar = threading.Event()
 trava = threading.RLock()
 
-janela.start()
+#janela.start()
 
 #Janela(raiz, parar, trava)
 

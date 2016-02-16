@@ -26,5 +26,10 @@ class d_maq:
 		self.z = z
 		self.t = t
 
+class ponteiro:
+	def __init__(self, obj): self.obj = obj
+	def get(self):    return self.obj
+	def set(self, obj):      self.obj = obj
+
 if __name__ == "__main__":
 	print 'Modulo que define um os tipos de dados (ponto, linha, etc.)'

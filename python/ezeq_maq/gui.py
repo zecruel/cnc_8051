@@ -304,8 +304,9 @@ class Janela(threading.Thread):
 					
 					self.iter = self.iter + 1
 				
-		#self.e.delete(0, tk.END) #teste
-		#self.e.insert(0, contador) #teste
+		self.e.delete(0, tk.END) #teste
+		self.e.insert(0, self.contador.get()) #teste
+		#print self.contador.get()
 		
 		self.desenho.after(10, self.temporal) # reagenda
 	
@@ -325,9 +326,9 @@ class Janela(threading.Thread):
 		self.limpa()
 		self.executa=1
 		self.continua = 1
-		tarefa = threading.Thread(target=background,
+		'''tarefa = threading.Thread(target=background,
 							args = (parar,trava))
-		tarefa.start()
+		tarefa.start()'''
 		
 	def limpa(self):
 		self.desenho.delete("all")
@@ -399,3 +400,6 @@ class Janela(threading.Thread):
 		if a > 0:
 			self.lista.olho_z = a
 		self.redesenha()
+		
+if __name__ == "__main__":
+	print 'Modulo que constroi a GUI Tk/Tcl do interpretador G-code'

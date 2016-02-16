@@ -5,6 +5,8 @@ import ezeq_maq.render
 import ezeq_maq.gui
 from ezeq_maq.ponto import*
 
+import time
+
 #-- debugando------------------------
 import logging
 logging.basicConfig(filename='log_filename.txt',
@@ -13,36 +15,17 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 
-def background(parar,trava):
-	global contador
+def background(parar, trava, contador):
+	#global contador
 	global exec_pronto
 	
 	for i in range(0,10000):
 		if parar.is_set(): break
 		trava. acquire()
-		contador = i
-		time.sleep(.01)
-		exec_pronto = 1
+		contador.set(i)
+		time.sleep(.1)
+		#exec_pronto = 1
 		trava.release()
-
-class linha:
-	def __init__(self, pt1 = ponto(), pt2 = ponto(), cor = 'yellow'):
-		self.pt1 = copy.deepcopy(pt1)
-		self.pt2 = copy.deepcopy(pt2)
-		self.cor = cor
-		
-class l_usin:
-	def __init__(self, pt1 = ponto(), pt2 = ponto(), vel = 0.0):
-		self.pt1 = copy.deepcopy(pt1)
-		self.pt2 = copy.deepcopy(pt2)
-		self.vel = vel
-		
-class d_maq:
-	def __init__(self, t, x, y, z):
-		self.x = x
-		self.y = y
-		self.z = z
-		self.t = t
 
 def converte_maq(x=0.0,y=0.0,z=0.0,vel=1.0):
 	soma = 16843009
@@ -103,7 +86,7 @@ def converte_maq(x=0.0,y=0.0,z=0.0,vel=1.0):
 		
 vel_max = 2000
 vel_min = 10.0
-contador = 0
+contador = ponteiro(0)
 exec_pronto = 0
 movimentos = []
 figura = ezeq_maq.render.bitmap(400,400,(255,255,255))
@@ -115,11 +98,17 @@ janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador))
 parar = threading.Event()
 trava = threading.RLock()
 
+tarefa = threading.Thread(target=background,
+					args = (parar, trava, contador))
+tarefa.start()
+
 #janela.start()
 
 #Janela(raiz, parar, trava)
 
 #raiz.mainloop()
-
+#contador.set(2)
+time.sleep(10)
 parar.set()
+#print contador
 #trava.release()

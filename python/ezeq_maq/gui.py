@@ -61,7 +61,7 @@ class Janela(threading.Thread):
 		
 		#self.trava = trava
 		#------------------------------------------
-		#Cria o visualizador de códico e sua barra de rolagem
+		#Cria o visualizador de codigo e sua barra de rolagem
 		#------------------------------------------
 		self.visual_gcode = tk.Listbox(self.raiz, width=40,
 							height=10,
@@ -117,26 +117,27 @@ class Janela(threading.Thread):
 		#------------------------------------------
 		#Cria os comandos de translação do desenho
 		#------------------------------------------
-		tk.Label(self.raiz, text='Pos. X:').grid(row=2, column=5,
+		tk.Label(self.raiz, text='Offset X:').grid(row=2, column=5,
 									sticky=tk.E)
-		self.trans_x = tk.Scale(self.raiz, from_=-20., to=20.,
+		self.trans_x = tk.Scale(self.raiz, from_=-100., to=100.,
 						orient=tk.HORIZONTAL,
-						command=self.olho_x)
+						command=self.offset_x)
 		self.trans_x.grid(row=2, column=6)
 		
-		tk.Label(self.raiz, text='Pos. Y:').grid(row=3, column=5,
+		tk.Label(self.raiz, text='Offset Y:').grid(row=3, column=5,
 									sticky=tk.E)
-		self.trans_y = tk.Scale(self.raiz, from_=-20., to=20.,
+		self.trans_y = tk.Scale(self.raiz, from_=-100., to=100.,
 						orient=tk.HORIZONTAL,
-						command=self.olho_y)
+						command=self.offset_y)
 		self.trans_y.grid(row=3, column=6)
 		
-		tk.Label(self.raiz, text='Pos. Z:').grid(row=4, column=5,
+		tk.Label(self.raiz, text='Zoom:').grid(row=4, column=5,
 									sticky=tk.E)
-		self.trans_z = tk.Scale(self.raiz, from_=-20., to=20.,
+		self.trans_z = tk.Scale(self.raiz, from_=10, to=500,
 						orient=tk.HORIZONTAL,
-						command=self.olho_z)
+						command=self.zoom)
 		self.trans_z.grid(row=4, column=6)
+		self.trans_z.set(100)
 		
 		#------------------------------------------
 		#Cria os botões
@@ -221,7 +222,7 @@ class Janela(threading.Thread):
 							min(self.codigo.x_min,
 							self.codigo.y_min,
 							self.codigo.z_min)))
-			self.trans_z.set(0)
+			self.trans_z.set(100)
 		
 			self.best_view_x = ((self.codigo.x_max -
 					self.codigo.x_min)/2) + self.codigo.x_min
@@ -380,25 +381,29 @@ class Janela(threading.Thread):
 	#-------------------------------------------
 	#Comando do spinbox de translação x
 	#-------------------------------------------
-	def olho_x(self, valor):		
-		self.lista.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
+	def offset_x(self, valor):		
+		#self.lista.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
+		self.lista.offset_x = int(valor)/100.0
 		self.redesenha()
 		
 		
 	#-------------------------------------------
 	#Comando do spinbox de translação y
 	#-------------------------------------------
-	def olho_y(self, valor):
-		self.lista.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
+	def offset_y(self, valor):
+		#self.lista.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
+		self.lista.offset_y = int(valor)/100.0
 		self.redesenha()
 
 	#-------------------------------------------
 	#Comando do spinbox de translação z
 	#-------------------------------------------
-	def olho_z(self, valor):
+	def zoom(self, valor):
+		'''
 		a = int(valor)*.2*self.best_view_z +self.best_view_z
 		if a > 0:
-			self.lista.olho_z = a
+			self.lista.olho_z = a'''
+		self.lista.zoom = int(valor)/100.0
 		self.redesenha()
 		
 if __name__ == "__main__":

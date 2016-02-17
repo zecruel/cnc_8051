@@ -4,8 +4,13 @@ import array
 class wireframe:
 	def __init__(self):
 		self.list_princ = array.array('f') # lista de objetos principal
-		#self.list_ = array.array('f') # lista de objetos principal
 		self.num = 0 # numero de itens na lista principal
+		
+		#variaveis de visualizacao na tela
+		self.offset_x = 0
+		self.offset_x = 0
+		self.zoom = 1.0
+		
 		# angulos de rotacao ao longo do eixo - variaveis tipo inteiro 0-360
 		self.rot_x = 0
 		self.rot_y = 0
@@ -76,11 +81,11 @@ class wireframe:
 			y2 = self.list_princ[i*7+3] * yx + self.list_princ[i*7+4] * yy + self.list_princ[i*7+5] * yz + self.olho_y
 			z2 = self.list_princ[i*7+3] * zx + self.list_princ[i*7+4] * zy + self.list_princ[i*7+5] * zz - self.olho_z
 			
-			p1x = int((x1 / (z1 + inf)) * img_w + img_w/2)
-			p1y = int((y1 / (z1+ inf)) * img_h + img_h/2)
+			p1x = int(self.zoom*((x1 / (z1 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
+			p1y = int(self.zoom*((y1 / (z1+ inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
 			
-			p2x = int((x2 / (z2 + inf)) * img_w + img_w/2)
-			p2y = int((y2 / (z2 + inf)) * img_h + img_h/2)
+			p2x = int(self.zoom*((x2 / (z2 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
+			p2y = int(self.zoom*((y2 / (z2 + inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
 			
 			img.line(p1x, p1y, p2x, p2y, self.rgb(self.list_princ[i*7+6]))
 		

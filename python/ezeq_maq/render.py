@@ -1,5 +1,6 @@
 import math
 import array
+import setup
 
 class wireframe:
 	def __init__(self):
@@ -17,8 +18,8 @@ class wireframe:
 		self.rot_z = 0
 		
 		# velocidades
-		self.v_max = 20
-		self.v_min = 2
+		self.v_max = setup.vel_max
+		self.v_min = 0.1 * setup.vel_max
 		
 		# ponto de observacao para calcular a projecao no plano 2D
 		self.olho_x = 0.0
@@ -223,33 +224,3 @@ class bitmap:
 
 if __name__ == "__main__":
 	print 'Modulo que renderiza um wireframe 3D em uma projecao 2D. O resultado eh um bitmap PPM binario'
-	''' o codigo abaixo eh somente para teste '''
-	largura = 200
-	altura = 300
-	
-	img = bitmap(largura, altura, (255, 255, 255))
-	wire = wireframe()
-	
-	from ponto import *
-	for i in xrange(10):
-		wire.add_lin(ponto(0,i*10-45,0), ponto (20,i*10-45,0), 100*i+1)
-	wire.draw(img)
-	#img.set_pt(50,50,(0,0,0))
-	#img.line(0,50,30,50,(0,0,0))
-	#img.line(30,0,30,50,(0,0,0))
-	#img.line(0,0,30,50,(0,0,0))
-	arq = img.ret_ppm()
-	
-	import Tkinter
-
-	root = Tkinter.Tk()
-
-	canvas = Tkinter.Canvas(root, width=largura, height=altura)
-
-	canvas.grid(row = 0, column = 0)
-
-	photo = Tkinter.PhotoImage(data= arq)
-
-	canvas.create_image(0,0, image=photo, anchor=Tkinter.NW)
-
-	root.mainloop()

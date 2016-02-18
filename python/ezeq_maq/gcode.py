@@ -2,8 +2,8 @@
 import math		#importa as funcoes matematicas
 import re
 import ponto
+import setup
 
-vel_max = 20
 class Gcode:
 	def __init__(self):
 		self.pre_x = 0.0
@@ -31,7 +31,7 @@ class Gcode:
 		self.f_min = None
 		
 		self.lista = []
-		self.velocidade = vel_max
+		self.velocidade = setup.vel_max #mm/s
 
 	def limpa(self):
 		self.pre_x = 0.0
@@ -59,7 +59,7 @@ class Gcode:
 		self.f_min = None
 		
 		self.lista = []
-		self.velocidade = vel_max
+		self.velocidade = setup.vel_max #mm/s
 		
 	
 	#--------- Rotina de interpretação do arquivo Gcode -------------------------
@@ -184,7 +184,7 @@ class Gcode:
 		#------Movimentos lineares ---------------
 		if(self.estilo == 1 or self.estilo == 0):
 			self.movimento = 1
-			vel = vel_max
+			vel = setup.vel_max
 			if(flag & self.movimento):
 				if (self.estilo == 1): vel= self.velocidade
 				self.lista.append(ponto.l_usin(ponto.ponto(self.pre_x,self.pre_y,self.pre_z),ponto.ponto(self.x,self.y,self.z), vel))

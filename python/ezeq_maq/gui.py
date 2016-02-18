@@ -241,12 +241,8 @@ class Janela(threading.Thread):
 			self.lista.rot_y = int(self.rot_y.get())
 			self.lista.rot_z = int(self.rot_z.get())
 
-			if self.codigo.f_max:
-				self.lista.vel_max = self.codigo.f_max
-				self.lista.vel_min = self.codigo.f_min
-			else:
-				self.lista.vel_max = self.lista.vel_min = 1.0
-			#print self.lista.vel_max, self.lista.vel_min
+			self.lista.v_min = self.codigo.f_min
+			
 			self.codigo.limpa()
 			self.redesenha()
 	

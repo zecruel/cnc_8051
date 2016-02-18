@@ -1,1 +1,1 @@
-__all__ = ['gcode', 'ponto','render']
+__all__ = ['gcode', 'ponto', 'render', 'gui', 'convert', 'setup']

@@ -26,63 +26,6 @@ def background(parar, trava, contador):
 		time.sleep(.1)
 		#exec_pronto = 1
 		trava.release()
-
-def converte_maq(x=0.0,y=0.0,z=0.0,vel=1.0):
-	soma = 16843009
-	inf = 4e-10
-	max_num = 2130640638
-
-	ms_tick = 4.0	#quantos interrupcoes acontecem na placa por ms
-	t_passo_min = 7.5 #tempo de passo minimo milisegundos
-	passos_rev = 200.0 #passos por revolucao
-	mm_rev = 15.0 #milimetros por revolucao
-
-	vel_max = 1000 * mm_rev / (passos_rev * t_passo_min) #mm por s
-	#print 'velocidade maxima=' , vel_max, 'mm/s'
-	#print 'resolucao da maquina=', mm_rev/passos_rev, 'mm'
-
-	dist = sqrt(x**2 + y**2 + z**2)
-	
-	tempo = dist/vel_max
-	if vel<=vel_max: tempo = dist/vel
-
-	tick_t = tempo * 1000 * ms_tick 
-	
-	#print 'tempo=', tempo, 's, vel=', vel, 'mm/s'
-	
-	vel_x = x / tempo
-	vel_y = y / tempo
-	vel_z = z / tempo
-
-	tick_x = ms_tick *1000 * mm_rev / (passos_rev * vel_x + inf)
-	tick_y = ms_tick *1000 * mm_rev / (passos_rev * vel_y + inf)
-	tick_z = ms_tick *1000 * mm_rev / (passos_rev * vel_z + inf)
-
-	#print tick_t /tick_x
-	#print tick_t /tick_y
-	#print tick_t /tick_z
-
-	if tick_t < max_num:
-		tick_t = tick_t +soma
-	else:
-		tick_t = max_num +soma
-
-	if tick_x < max_num:
-		tick_x = tick_x +soma
-	else:
-		tick_x = max_num +soma
-
-	if tick_y < max_num:
-		tick_y = tick_y +soma
-	else:
-		tick_y = max_num +soma
-
-	if tick_z < max_num:
-		tick_z = tick_z +soma
-	else:
-		tick_z = max_num +soma
-	
-	return d_maq(tick_t, tick_x, tick_y, tick_z)
 		
 vel_max = 2000
 vel_min = 10.0

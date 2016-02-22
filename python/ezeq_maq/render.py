@@ -12,6 +12,8 @@ class wireframe:
 		self.offset_x = 0
 		self.zoom = 1.0
 		
+		self.esc_cor = 1.0 #escala de cor - afeta a velocidade maxima
+		
 		# angulos de rotacao ao longo do eixo - variaveis tipo inteiro 0-360
 		self.rot_x = 0
 		self.rot_y = 0
@@ -117,7 +119,8 @@ class wireframe:
 		"""
 		try:
 			# normalize to [0,1]
-			x = (mag-self.v_min)/(self.v_max-self.v_min)
+			x = (mag - self.esc_cor*self.v_min)/(self.esc_cor*self.v_max -
+										self.esc_cor* self.v_min)
 		except:
 			# cmax = cmin
 			x = 0.5

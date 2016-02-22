@@ -140,6 +140,17 @@ class Janela(threading.Thread):
 		self.trans_z.set(100)
 		
 		#------------------------------------------
+		#Cria o comando de escala de cores do desenho
+		#------------------------------------------
+		tk.Label(self.raiz, text='Esc. Cor:').grid(row=5, column=5,
+									sticky=tk.E)
+		self.esc_cor = tk.Scale(self.raiz, from_=10, to=500,
+						orient=tk.HORIZONTAL,
+						command=self.escala_cor)
+		self.esc_cor.grid(row=5, column=6)
+		self.esc_cor.set(100)
+		
+		#------------------------------------------
 		#Cria os botões
 		#------------------------------------------
 		self.b_simula = tk.Button(self.raiz, text='Simula GCODE',
@@ -222,15 +233,17 @@ class Janela(threading.Thread):
 							min(self.codigo.x_min,
 							self.codigo.y_min,
 							self.codigo.z_min)))
+			self.trans_x.set(0)
+			self.trans_y.set(0)
 			self.trans_z.set(100)
+			self.esc_cor.set(100)
+			
 		
 			self.best_view_x = ((self.codigo.x_max -
 					self.codigo.x_min)/2) + self.codigo.x_min
-			self.trans_x.set(0)
 		
 			self.best_view_y = ((self.codigo.y_max -
 					self.codigo.y_min)/2) + self.codigo.y_min
-			self.trans_y.set(0)
 			
 			self.lista.olho_x = self.best_view_x
 			self.lista.olho_y = self.best_view_y
@@ -241,7 +254,7 @@ class Janela(threading.Thread):
 			self.lista.rot_y = int(self.rot_y.get())
 			self.lista.rot_z = int(self.rot_z.get())
 
-			self.lista.v_min = self.codigo.f_min
+			#self.lista.v_min = self.codigo.f_min
 			
 			self.codigo.limpa()
 			self.redesenha()
@@ -375,7 +388,7 @@ class Janela(threading.Thread):
 		self.redesenha()
 		
 	#-------------------------------------------
-	#Comando do spinbox de translação x
+	#Comando do slider de translação x
 	#-------------------------------------------
 	def offset_x(self, valor):		
 		#self.lista.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
@@ -384,7 +397,7 @@ class Janela(threading.Thread):
 		
 		
 	#-------------------------------------------
-	#Comando do spinbox de translação y
+	#Comando do slider de translação y
 	#-------------------------------------------
 	def offset_y(self, valor):
 		#self.lista.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
@@ -392,7 +405,7 @@ class Janela(threading.Thread):
 		self.redesenha()
 
 	#-------------------------------------------
-	#Comando do spinbox de translação z
+	#Comando do slider de translação z
 	#-------------------------------------------
 	def zoom(self, valor):
 		'''
@@ -400,6 +413,13 @@ class Janela(threading.Thread):
 		if a > 0:
 			self.lista.olho_z = a'''
 		self.lista.zoom = int(valor)/100.0
+		self.redesenha()
+	
+	#-------------------------------------------
+	#Comando do slider de escala de cor
+	#-------------------------------------------
+	def escala_cor(self, valor):
+		self.lista.esc_cor = int(valor)/100.0
 		self.redesenha()
 		
 if __name__ == "__main__":

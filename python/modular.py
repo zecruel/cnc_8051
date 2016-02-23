@@ -6,7 +6,7 @@ import ezeq_maq.gui
 from ezeq_maq.ponto import*
 
 import time
-
+'''
 #-- debugando------------------------
 import logging
 logging.basicConfig(filename='log_filename.txt',
@@ -14,7 +14,7 @@ logging.basicConfig(filename='log_filename.txt',
 			format='%(asctime)s - %(levelname)s - %(message)s')
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
-
+'''
 def background(parar, trava, contador):
 	#global contador
 	global exec_pronto
@@ -27,8 +27,8 @@ def background(parar, trava, contador):
 		#exec_pronto = 1
 		trava.release()
 		
-vel_max = 2000
-vel_min = 10.0
+#vel_max = 2000
+#vel_min = 10.0
 contador = ponteiro(0)
 exec_pronto = 0
 movimentos = []

@@ -33,8 +33,13 @@ def clearBit(int_type, offset):
 def toggleBit(int_type, offset):
 	mask = 1 << offset
 	return(int_type ^ mask)
+	
+def maq_le(mens):
+	a = conv_16_32(mens[1:3])
+	tempo_rest = (a - soma)/(1000 * ms_tick)
+	return tempo_rest
 
-def converte_maq(x=0.0,y=0.0,z=0.0,vel=1.0):
+def maq_escreve(x=0.0,y=0.0,z=0.0,vel=1.0):
 
 	dist = math.sqrt(x**2 + y**2 + z**2) # distancia a ser percorrida
 	
@@ -55,38 +60,35 @@ def converte_maq(x=0.0,y=0.0,z=0.0,vel=1.0):
 
 	
 	#verifica se as quantidades sao aceitaveis e corrige a contagem da placa
-	if tick_t < max_num:
-		tick_t = tick_t + soma
-	else:
-		tick_t = max_num + soma
+	if tick_t < max_num: tick_t = tick_t + soma
+	else: tick_t = max_num + soma
 
-	if tick_x < max_num:
-		tick_x = tick_x + soma
-	else:
-		tick_x = max_num + soma
+	if tick_x < max_num: tick_x = tick_x + soma
+	else: tick_x = max_num + soma
 
-	if tick_y < max_num:
-		tick_y = tick_y + soma
-	else:
-		tick_y = max_num + soma
+	if tick_y < max_num: tick_y = tick_y + soma
+	else: tick_y = max_num + soma
 
-	if tick_z < max_num:
-		tick_z = tick_z +soma
-	else:
-		tick_z = max_num + soma
+	if tick_z < max_num: tick_z = tick_z +soma
+	else: tick_z = max_num + soma
 	
 	# sentidos dos eixos
-	if x < 0:
-		tick_x = tick_x + negativo
-		
-	if y < 0:
-		tick_y = tick_y + negativo
+	if x < 0: tick_x = tick_x + negativo
+	if y < 0: tick_y = tick_y + negativo
+	if z < 0: tick_z = tick_z + negativo
 	
-	if z < 0:
-		tick_z = tick_z + negativo
+	# prepara a mensagem para envio, transformando em uma lista
+	tempo = conv_32_16(tick_t) # tempo
+	eixo_x = conv_32_16(tick_x) #eixo x
+	eixo_y = conv_32_16(tick_y)#eixo y
+	eixo_z = conv_32_16(tick_z) #eixo z
+	comando = [1]	# comando de execucao
+	mens = comando + tempo + eixo_x + eixo_y + eixo_z
 	
-	return tick_t, tick_x, tick_y, tick_z
+	return mens
 
 if __name__ == "__main__":
 	print 'Modulo de funcoes de conversao de tipos de dados'
-	print converte_maq( 10, 20, 30, 1)
+	mens = maq_escreve( 10, 20, 30, 2)
+	print mens
+	print maq_le(mens)

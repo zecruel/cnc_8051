@@ -29,6 +29,7 @@ class Janela(threading.Thread):
 		self.iter2 = 0
 		self.continua = 0
 		self.executa = 0
+		self.simulacao = 0
 		
 		self.best_view_x = 0
 		self.best_view_y = 0
@@ -226,6 +227,9 @@ class Janela(threading.Thread):
 								'linha':num_linha})
 							self.lista.add_lin(pt1, pt2,
 									self.codigo.lista[i].vel)
+							#self.lista.cursor_x = pt1.x
+							#self.lista.cursor_y = pt1.y
+							#self.lista.cursor_z = pt1.z
 					#------------------------------------------
 			self.best_view_z = (1.3*(max(self.codigo.x_max,
 							self.codigo.y_max,
@@ -282,37 +286,35 @@ class Janela(threading.Thread):
 		#global exec_pronto
 		#global movimentos
 		
-		if  self.continua & (self.iter < len(self.movimentos)):
-			self.visual_gcode.selection_clear(0,tk.END)
-			self.visual_gcode.selection_set(
-						self.movimentos[self.iter]['linha'])
-			if (self.movimentos[self.iter]['linha']%23 == 0): 
-				self.visual_gcode.yview(
-						self.movimentos[self.iter]['linha'])
-			#codigo.linha = self.visual_gcode.get(self.iter)
-			#codigo.interpreta()
-			
-			if self.executa:
-				if len(self.movimentos) > 0:
-					pt1 = self.movimentos[self.iter]['pt1']
-					pt2 = self.movimentos[self.iter]['pt2']
-					#vel_min = 10.0
-					
-					#teste
-					if ((pt2.x-pt1.x)!=0) or ((pt2.y-pt1.y)!=0
-								) or ((pt2.z-pt1.z)!=0):
-						dados = converte_maq(pt2.x-pt1.x,
-								pt2.y-pt1.y, pt2.z-pt1.z,
-								self.movimentos[self.iter]['vel'])						
-					
-					cor = rgb(self.movimentos[self.iter]['vel'],
-						vel_min, vel_max)
-					#tela.lista_orig.append(linha(pt1, pt2, cor))
-
-					#tela.transforma()
+		if self.simulacao and (self.iter < self.visual_gcode.size()) and self.continua:
+			if self.iter != self.iter_antigo:
+				self.iter_antigo = self.iter
+				self.iter2 = 0
+				self.visual_gcode.selection_clear(0,tk.END)  		#limpa a linha de codigo selecionada anterior
+				self.visual_gcode.selection_set(self.iter)  		#e mostra a linha atual
+				if (self.iter%23 == 0): 					#se a linha selecionada esta proxima do final da exibicao
+					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
+				
+				self.codigo.linha = self.visual_gcode.get(self.iter) 	#pega a linha atual
+				#codigo.interpreta()						#e interpreta
+				self.codigo.interpreta()
+				
+				#--------------------------------teste
+				
+			if (self.iter2 < len(self.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
+				pt1 = self.codigo.lista[self.iter2].pt1
+				pt2 = self.codigo.lista[self.iter2].pt2
+				if ((pt2.x-pt1.x)!=0) or (
+				     (pt2.y-pt1.y)!=0) or (
+				     (pt2.z-pt1.z)!=0):
+					self.lista.cursor_x = pt1.x
+					self.lista.cursor_y = pt1.y
+					self.lista.cursor_z = pt1.z
 					self.redesenha()
-					
-					self.iter = self.iter + 1
+				self.iter2 = self.iter2 + 1
+			else: self.iter = self.iter + 1 #passa para a proxima
+			
+			#print self.iter, self.iter2, len(self.codigo.lista)
 				
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
@@ -327,6 +329,7 @@ class Janela(threading.Thread):
 	def simula(self):
 		self.limpa()
 		self.continua = 1
+		self.simulacao = 1
 		
 	def pausa(self):
 		self.continua = 0
@@ -347,7 +350,7 @@ class Janela(threading.Thread):
 		self.iter = 0
 		self.iter_antigo = -1
 		self.codigo.limpa()
-		self.lista.limpa()
+		#self.lista.limpa()
 		self.redesenha()
 		
 	#-------------------------------------------

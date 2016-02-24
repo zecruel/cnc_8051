@@ -9,7 +9,7 @@ class wireframe:
 		
 		#variaveis de visualizacao na tela
 		self.offset_x = 0
-		self.offset_x = 0
+		self.offset_y = 0
 		self.zoom = 1.0
 		
 		self.esc_cor = 1.0 #escala de cor - afeta a velocidade maxima
@@ -28,16 +28,27 @@ class wireframe:
 		self.olho_y = 0.0
 		self.olho_z = 100.0
 		
+		# ponto de deslocamento 3D do cursor
+		self.cursor_x = 0.0
+		self.cursor_y = 0.0
+		self.cursor_z = 0.0
+		
 		# tabelas de seno e cosseno para melhorar a velocidade
 		self.sen = array.array('f', 
-		[math.sin(x*math.pi/180) for  x in xrange(0,361)])
+		[math.sin(x*math.pi/180) for  x in range(0,361)])
 		self.cos = array.array('f', 
-		[math.cos(x*math.pi/180) for  x in xrange(0,361)])
+		[math.cos(x*math.pi/180) for  x in range(0,361)])
 		
 		# objeto que representa os eixos na visualizacao
 		self.eixos = array.array('f', [0,0,0,1,0,0,0, # x
 		0,0,0,0,1,0,1, # y
 		0,0,0,0,0,1,2]) # z
+		
+		# objeto que representa o cursor na visualizacao
+		self.cursor = array.array('f', [0,0,0,0,-0.5,1,2, # ln1
+		0,0,0,0.35,0.35,1,2, # ln2
+		0,0,0,-0.35,0.35,1,2]) # ln3
+		
 	
 	def limpa(self):
 		self.list_princ = array.array('f') # reinicia a lista
@@ -75,7 +86,7 @@ class wireframe:
 		zy = self.cos[a]*self.sen[c] - self.sen[a]*self.sen[b]*self.cos[c] #calc zy constant
 		zz = self.cos[b]*self.cos[c] #calc zz constant
 		
-		for i in xrange(self.num):
+		for i in range(self.num):
 			x1 = self.list_princ[i*7] * xx + self.list_princ[i*7+1] * xy + self.list_princ[i*7+2] * xz + self.olho_x
 			y1 = self.list_princ[i*7] * yx + self.list_princ[i*7+1] * yy + self.list_princ[i*7+2] * yz + self.olho_y
 			z1 = self.list_princ[i*7] * zx + self.list_princ[i*7+1] * zy + self.list_princ[i*7+2] * zz - self.olho_z
@@ -94,7 +105,7 @@ class wireframe:
 		
 		#desenha os eixos para orientacao
 		cor_eixo = [(255,0,0), (0,255,0), (0,0,255)]
-		for i in xrange(3):
+		for i in range(3):
 			x1 = self.eixos[i*7] * xx + self.eixos[i*7+1] * xy + self.eixos[i*7+2] * xz + 4
 			y1 = self.eixos[i*7] * yx + self.eixos[i*7+1] * yy + self.eixos[i*7+2] * yz + 4
 			z1 = self.eixos[i*7] * zx + self.eixos[i*7+1] * zy + self.eixos[i*7+2] * zz - 10
@@ -110,6 +121,24 @@ class wireframe:
 			p2y = int((y2 / (z2 + inf)) * img_h + img_h/2)
 			
 			img.line(p1x, p1y, p2x, p2y, cor_eixo[int(self.eixos[i*7+6])])
+		
+		#desenha o cursor
+		for i in range(3):
+			x1 = (self.cursor[i*7]+self.cursor_x) * xx + (self.cursor[i*7+1]+self.cursor_y) * xy + (self.cursor[i*7+2]+self.cursor_z) * xz + self.olho_x
+			y1 = (self.cursor[i*7]+self.cursor_x) * yx + (self.cursor[i*7+1]+self.cursor_y) * yy + (self.cursor[i*7+2]+self.cursor_z) * yz + self.olho_y
+			z1 = (self.cursor[i*7]+self.cursor_x) * zx + (self.cursor[i*7+1]+self.cursor_y) * zy + (self.cursor[i*7+2]+self.cursor_z) * zz - self.olho_z
+			
+			x2 = (self.cursor[i*7+3]+self.cursor_x) * xx + (self.cursor[i*7+4]+self.cursor_y) * xy + (self.cursor[i*7+5]+self.cursor_z) * xz + self.olho_x
+			y2 = (self.cursor[i*7+3]+self.cursor_x) * yx + (self.cursor[i*7+4]+self.cursor_y) * yy + (self.cursor[i*7+5]+self.cursor_z) * yz + self.olho_y
+			z2 = (self.cursor[i*7+3]+self.cursor_x) * zx + (self.cursor[i*7+4]+self.cursor_y) * zy + (self.cursor[i*7+5]+self.cursor_z) * zz - self.olho_z
+			
+			p1x = int(self.zoom*((x1 / (z1 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
+			p1y = int(self.zoom*((y1 / (z1+ inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
+			
+			p2x = int(self.zoom*((x2 / (z2 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
+			p2y = int(self.zoom*((y2 / (z2 + inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
+			
+			img.line(p1x, p1y, p2x, p2y, (0,0,0))
 	
 	def rgb(self, mag):
 		"""
@@ -142,13 +171,13 @@ class bitmap:
 		self.altura = altura
 		self.fundo = fundo
 		self.bitarray = array.array('B')
-		for i in xrange(self.largura*self.altura):
+		for i in range(self.largura*self.altura):
 			self.bitarray.append(self.fundo[0])
 			self.bitarray.append(self.fundo[1])
 			self.bitarray.append(self.fundo[2])
 	
 	def limpa(self):
-		for i in xrange(self.largura*self.altura):
+		for i in range(self.largura*self.altura):
 			self.bitarray[i*3:i*3+3] = array.array(
 			'B',[self.fundo[0], self.fundo[1], self.fundo[2]])
 	

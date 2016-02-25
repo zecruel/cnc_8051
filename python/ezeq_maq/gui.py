@@ -31,6 +31,10 @@ class Janela(threading.Thread):
 		self.executa = 0
 		self.simulacao = 0
 		
+		self.pt1 = ponto() #para calculo do cursor
+		self.pt2 = ponto()
+		self.t_cursor = 0
+		
 		self.best_view_x = 0
 		self.best_view_y = 0
 		self.best_view_z = 100
@@ -43,6 +47,7 @@ class Janela(threading.Thread):
 		self.figura = self.args[1]
 		self.codigo = self.args[2]
 		self.contador = self.args[3]
+		self.libera = self.args[4]
 
 		#Imagem = bmp._saveBitMapPPM( )
 		self.photo = ''#PhotoImage(data= Imagem)
@@ -202,6 +207,7 @@ class Janela(threading.Thread):
 			self.visual_gcode.delete(0,tk.END)
 			with open(arquivo) as f:
 				self.movimentos = []
+				self.lista.limpa()
 				for num_linha, line in enumerate(f):
 					# retira os separadores de linha e os substitui por espaços
 					line = line.replace('\r', ' ') 
@@ -289,38 +295,17 @@ class Janela(threading.Thread):
 		if self.simulacao and (self.iter < self.visual_gcode.size()) and self.continua:
 			if self.iter != self.iter_antigo:
 				self.iter_antigo = self.iter
-				self.iter2 = 0
+				#self.iter2 = 0
 				self.visual_gcode.selection_clear(0,tk.END)  		#limpa a linha de codigo selecionada anterior
 				self.visual_gcode.selection_set(self.iter)  		#e mostra a linha atual
-				if (self.iter%23 == 0): 					#se a linha selecionada esta proxima do final da exibicao
+				if (self.iter%23 >= 22): 					#se a linha selecionada esta proxima do final da exibicao
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
-				
-				self.codigo.linha = self.visual_gcode.get(self.iter) 	#pega a linha atual
-				#codigo.interpreta()						#e interpreta
-				self.codigo.interpreta()
-				
-				#--------------------------------teste
-				
-			if (self.iter2 < len(self.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
-				pt1 = self.codigo.lista[self.iter2].pt1
-				pt2 = self.codigo.lista[self.iter2].pt2
-				if ((pt2.x-pt1.x)!=0) or (
-				     (pt2.y-pt1.y)!=0) or (
-				     (pt2.z-pt1.z)!=0):
-					self.lista.cursor_x = pt1.x
-					self.lista.cursor_y = pt1.y
-					self.lista.cursor_z = pt1.z
-					self.redesenha()
-				self.iter2 = self.iter2 + 1
-			else: self.iter = self.iter + 1 #passa para a proxima
-			
-			#print self.iter, self.iter2, len(self.codigo.lista)
-				
+			self.redesenha()
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
 		#print self.contador.get()
 		
-		self.desenho.after(10, self.temporal) # reagenda
+		self.desenho.after(100, self.temporal) # reagenda
 	
 	
 	#------------------------------------------
@@ -330,6 +315,8 @@ class Janela(threading.Thread):
 		self.limpa()
 		self.continua = 1
 		self.simulacao = 1
+		with self.libera:
+			self.libera.notify()
 		
 	def pausa(self):
 		self.continua = 0

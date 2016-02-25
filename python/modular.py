@@ -5,6 +5,8 @@ import ezeq_maq.render
 import ezeq_maq.gui
 from ezeq_maq.ponto import*
 
+import Queue
+
 import time
 '''
 #-- debugando------------------------
@@ -15,35 +17,86 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 '''
-def background(parar, trava, contador):
+def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
 	#global contador
-	global exec_pronto
-	
-	for i in range(0,10000):
-		if parar.is_set(): break
-		trava. acquire()
-		contador.set(i)
-		time.sleep(.1)
-		#exec_pronto = 1
-		trava.release()
+	#global exec_pronto
+	while True:
+		with libera:
+			libera.wait()
+		while janela.simulacao and (janela.iter < janela.visual_gcode.size()):
+			janela.codigo.linha = janela.visual_gcode.get(janela.iter) 	#pega a linha atual
+			janela.codigo.interpreta() #e interpreta
+			#print janela.iter
+			for i in range(len(janela.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
+				pt1 = janela.codigo.lista[i].pt1
+				pt2 = janela.codigo.lista[i].pt2
+				if ((pt2.x-pt1.x)!=0) or (
+				     (pt2.y-pt1.y)!=0) or (
+				     (pt2.z-pt1.z)!=0):
+					mens_trans.put('executa')
+					janela.lista.cursor_x = pt1.x
+					janela.lista.cursor_y = pt1.y
+					janela.lista.cursor_z = pt1.z
+					with pronto:
+						pronto.wait()
+					a = mens_rec.get()
+					mens_rec.task_done()
+			janela.iter += 1 #passa para a proxima
+
+#comunicacao com a placa
+def comunica(instr, trava, mens_trans, mens_rec, contador, pronto):
+	while True:
+		#trava. acquire()
+		
+		#transmissao de mensagem
+		if not mens_trans.empty():
+			a= mens_trans.get()
+			mens_trans.task_done()
+			contador.set(2)
+			
+		#recepcao de mensagem
+		if contador.get() > 0:
+			contador.set(contador.get()-1)
+		if contador.get() == 1:
+			mens_rec.put(contador.get())
+			with pronto:
+				pronto.notify()
+		#trava.release()
+		time.sleep(0.15)
+		
 		
 #vel_max = 2000
 #vel_min = 10.0
 contador = ponteiro(0)
 exec_pronto = 0
 movimentos = []
+
+mens_trans = Queue.Queue()
+mens_rec  = Queue.Queue()
+instr = None
+
+parar = threading.Event()
+trava = threading.RLock()
+libera = threading.Condition()
+pronto = threading.Condition()
+
 figura = ezeq_maq.render.bitmap(400,400,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
-janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador))
+janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera))
 
-parar = threading.Event()
-trava = threading.RLock()
+execut = threading.Thread(target=execucao,
+					args = (contador, janela, mens_trans, mens_rec, libera, pronto))
+execut.setDaemon(True)
+execut.start()
 
-tarefa = threading.Thread(target=background,
-					args = (parar, trava, contador))
+tarefa = threading.Thread(target=comunica,
+					args = (instr, trava, mens_trans, mens_rec, contador, pronto))
+tarefa.setDaemon(True)
 tarefa.start()
+
+#mens_trans.put('teste Queue')
 
 #janela.start()
 
@@ -51,7 +104,7 @@ tarefa.start()
 
 #raiz.mainloop()
 #contador.set(2)
-time.sleep(10)
-parar.set()
+#time.sleep(10)
+#parar.set()
 #print contador
 #trava.release()

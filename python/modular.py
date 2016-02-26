@@ -30,9 +30,10 @@ def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
 			for i in range(len(janela.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
 				pt1 = janela.codigo.lista[i].pt1
 				pt2 = janela.codigo.lista[i].pt2
-				if ((pt2.x-pt1.x)!=0) or (
-				     (pt2.y-pt1.y)!=0) or (
-				     (pt2.z-pt1.z)!=0):
+				delta_x = (pt2.x-pt1.x)
+				delta_y = (pt2.y-pt1.y)
+				delta_z = (pt2.z-pt1.z)
+				if delta_x!=0 or delta_y!=0 or delta_z!=0:
 					mens_trans.put('executa')
 					janela.lista.cursor_x = pt1.x
 					janela.lista.cursor_y = pt1.y

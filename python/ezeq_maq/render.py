@@ -123,14 +123,23 @@ class wireframe:
 			img.line(p1x, p1y, p2x, p2y, cor_eixo[int(self.eixos[i*7+6])])
 		
 		#desenha o cursor
+		esc = 0.1 # a escala do cursor nunca pode ser maior ou igual a 1.0
 		for i in range(3):
-			x1 = (self.cursor[i*7]+self.cursor_x) * xx + (self.cursor[i*7+1]+self.cursor_y) * xy + (self.cursor[i*7+2]+self.cursor_z) * xz + self.olho_x
-			y1 = (self.cursor[i*7]+self.cursor_x) * yx + (self.cursor[i*7+1]+self.cursor_y) * yy + (self.cursor[i*7+2]+self.cursor_z) * yz + self.olho_y
-			z1 = (self.cursor[i*7]+self.cursor_x) * zx + (self.cursor[i*7+1]+self.cursor_y) * zy + (self.cursor[i*7+2]+self.cursor_z) * zz - self.olho_z
+			xc1 = self.cursor_x + self.cursor[i*7] * esc * abs(self.olho_z)
+			yc1 = self.cursor_y + self.cursor[i*7+1] * esc * abs(self.olho_z)
+			zc1 = self.cursor_z + self.cursor[i*7+2] * esc * abs(self.olho_z)
 			
-			x2 = (self.cursor[i*7+3]+self.cursor_x) * xx + (self.cursor[i*7+4]+self.cursor_y) * xy + (self.cursor[i*7+5]+self.cursor_z) * xz + self.olho_x
-			y2 = (self.cursor[i*7+3]+self.cursor_x) * yx + (self.cursor[i*7+4]+self.cursor_y) * yy + (self.cursor[i*7+5]+self.cursor_z) * yz + self.olho_y
-			z2 = (self.cursor[i*7+3]+self.cursor_x) * zx + (self.cursor[i*7+4]+self.cursor_y) * zy + (self.cursor[i*7+5]+self.cursor_z) * zz - self.olho_z
+			x1 = xc1 * xx + yc1 * xy + zc1 * xz + self.olho_x
+			y1 = xc1 * yx + yc1 * yy + zc1 * yz + self.olho_y
+			z1 = xc1 * zx + yc1 * zy + zc1 * zz - self.olho_z
+			
+			xc1 = self.cursor_x + self.cursor[i*7+3] * esc * abs(self.olho_z)
+			yc1 = self.cursor_y + self.cursor[i*7+4] * esc * abs(self.olho_z)
+			zc1 = self.cursor_z + self.cursor[i*7+5] * esc * abs(self.olho_z)
+			
+			x2 = xc1 * xx + yc1 * xy + zc1 * xz + self.olho_x
+			y2 = xc1 * yx + yc1 * yy + zc1 * yz + self.olho_y
+			z2 = xc1 * zx + yc1 * zy + zc1 * zz - self.olho_z
 			
 			p1x = int(self.zoom*((x1 / (z1 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
 			p1y = int(self.zoom*((y1 / (z1+ inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)

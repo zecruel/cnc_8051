@@ -294,12 +294,14 @@ class Janela(threading.Thread):
 		
 		if self.simulacao and (self.iter < self.visual_gcode.size()) and self.continua:
 			if self.iter != self.iter_antigo:
-				self.iter_antigo = self.iter
 				#self.iter2 = 0
 				self.visual_gcode.selection_clear(0,tk.END)  		#limpa a linha de codigo selecionada anterior
 				self.visual_gcode.selection_set(self.iter)  		#e mostra a linha atual
-				if (self.iter%23 >= 22): 					#se a linha selecionada esta proxima do final da exibicao
+				delta = self.iter - self.iter2
+				if (delta >= 22): 					#se a linha selecionada esta proxima do final da exibicao
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
+					self.iter2 = self.iter
+				self.iter_antigo = self.iter
 			self.redesenha()
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
@@ -335,6 +337,7 @@ class Janela(threading.Thread):
 		self.continua = 0
 		self.executa=0 
 		self.iter = 0
+		self.iter2 = 0
 		self.iter_antigo = -1
 		self.codigo.limpa()
 		#self.lista.limpa()

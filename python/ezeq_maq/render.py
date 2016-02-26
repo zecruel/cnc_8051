@@ -45,9 +45,16 @@ class wireframe:
 		0,0,0,0,0,1,2]) # z
 		
 		# objeto que representa o cursor na visualizacao
-		self.cursor = array.array('f', [0,0,0,0,-0.5,1,2, # ln1
-		0,0,0,0.35,0.35,1,2, # ln2
-		0,0,0,-0.35,0.35,1,2]) # ln3
+		x1 = 0.14
+		y1 = 0.14
+		z1 = 1.0
+		y2 = 0.2
+		self.cursor = array.array('f', [0,0,0,0,y2,z1,2, # ln1
+		0,0,0,x1,-y1,z1,2, # ln2
+		-x1,-y1,z1,x1,-y1,z1,2,
+		-x1,-y1,z1,0,y2,z1,2,
+		x1,-y1,z1,0,y2,z1,2,
+		0,0,0,-x1,-y1,z1,2]) # ln3
 		
 	
 	def limpa(self):
@@ -124,7 +131,7 @@ class wireframe:
 		
 		#desenha o cursor
 		esc = 0.1 # a escala do cursor nunca pode ser maior ou igual a 1.0
-		for i in range(3):
+		for i in range(6):
 			xc1 = self.cursor_x + self.cursor[i*7] * esc * abs(self.olho_z)
 			yc1 = self.cursor_y + self.cursor[i*7+1] * esc * abs(self.olho_z)
 			zc1 = self.cursor_z + self.cursor[i*7+2] * esc * abs(self.olho_z)

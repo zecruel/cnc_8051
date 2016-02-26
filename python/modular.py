@@ -6,6 +6,7 @@ import ezeq_maq.gui
 from ezeq_maq.ponto import*
 
 import Queue
+import math
 
 import time
 '''
@@ -23,7 +24,8 @@ def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
 	while True:
 		with libera:
 			libera.wait()
-		while janela.simulacao and (janela.iter < janela.visual_gcode.size()):
+			tamanho = janela.visual_gcode.size()
+		while janela.simulacao and (janela.iter <= tamanho):
 			janela.codigo.linha = janela.visual_gcode.get(janela.iter) 	#pega a linha atual
 			janela.codigo.interpreta() #e interpreta
 			#print janela.iter
@@ -33,6 +35,8 @@ def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
 				delta_x = (pt2.x-pt1.x)
 				delta_y = (pt2.y-pt1.y)
 				delta_z = (pt2.z-pt1.z)
+				dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
+				tempo = dist/janela.codigo.lista[i].vel
 				if delta_x!=0 or delta_y!=0 or delta_z!=0:
 					mens_trans.put('executa')
 					janela.lista.cursor_x = pt1.x

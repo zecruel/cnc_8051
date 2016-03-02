@@ -18,7 +18,7 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 '''
-def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
+def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, contador, pronto):
 	#global contador
 	#global exec_pronto
 	while True:
@@ -37,35 +37,56 @@ def execucao(contador, janela, mens_trans, mens_rec, libera, pronto):
 				delta_z = (pt2.z-pt1.z)
 				dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
 				tempo = dist/janela.codigo.lista[i].vel
+				
+				janela.pt1 = pt1
+				janela.pt2 = pt2
+				janela.t_cursor = tempo
+				
 				if delta_x!=0 or delta_y!=0 or delta_z!=0:
 					mens_trans.put('executa')
-					janela.lista.cursor_x = pt1.x
-					janela.lista.cursor_y = pt1.y
-					janela.lista.cursor_z = pt1.z
-					with pronto:
-						pronto.wait()
-					a = mens_rec.get()
-					mens_rec.task_done()
+					with maq_livre:
+						maq_livre.wait()
+					#a = mens_rec.get()
+					#mens_rec.task_done()
 			janela.iter += 1 #passa para a proxima
 
 #comunicacao com a placa
-def comunica(instr, trava, mens_trans, mens_rec, contador, pronto):
+def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, contador, pronto):
+	temp = 0
 	while True:
-		#trava. acquire()
-		
-		#transmissao de mensagem
-		if not mens_trans.empty():
-			a= mens_trans.get()
-			mens_trans.task_done()
-			contador.set(2)
-			
 		#recepcao de mensagem
+		#simulacao
 		if contador.get() > 0:
 			contador.set(contador.get()-1)
-		if contador.get() == 1:
-			mens_rec.put(contador.get())
+		elif temp > 0:
+			temp -= 1
+			#verifica o status da maquina
+			if temp == 0:
+				with maq_parada:
+					maq_parada.notify()
+			if temp < 2:
+				with maq_livre:
+					maq_livre.notify()
+			if temp != 0:
+				contador.set(10) #teste
+			'''mens_rec.put(contador.get())
 			with pronto:
 				pronto.notify()
+			with maq_parada:
+				maq_parada.notify()'''
+		
+		#transmissao de mensagem
+		if not mens_trans.empty() and temp < 2:
+			a= mens_trans.get()
+			mens_trans.task_done()
+			print a
+			if temp == 0: 
+				contador.set(10) #teste
+				with maq_livre:
+					maq_livre.notify()
+			temp += 1
+			
+		
 		#trava.release()
 		time.sleep(0.15)
 		
@@ -73,8 +94,8 @@ def comunica(instr, trava, mens_trans, mens_rec, contador, pronto):
 #vel_max = 2000
 #vel_min = 10.0
 contador = ponteiro(0)
-exec_pronto = 0
-movimentos = []
+#exec_pronto = 0
+#movimentos = []
 
 mens_trans = Queue.Queue()
 mens_rec  = Queue.Queue()
@@ -84,20 +105,24 @@ parar = threading.Event()
 trava = threading.RLock()
 libera = threading.Condition()
 pronto = threading.Condition()
+maq_parada = threading.Condition()
+maq_livre = threading.Condition()
 
-figura = ezeq_maq.render.bitmap(400,400,(255,255,255))
+figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
 janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera))
 
 execut = threading.Thread(target=execucao,
-					args = (contador, janela, mens_trans, mens_rec, libera, pronto))
+					args = (janela, libera, mens_trans, mens_rec,
+					maq_parada, maq_livre, contador, pronto))
 execut.setDaemon(True)
 execut.start()
 
 tarefa = threading.Thread(target=comunica,
-					args = (instr, trava, mens_trans, mens_rec, contador, pronto))
+					args = (instr, mens_trans, mens_rec,
+					maq_parada, maq_livre, contador, pronto))
 tarefa.setDaemon(True)
 tarefa.start()
 

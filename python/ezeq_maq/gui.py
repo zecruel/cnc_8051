@@ -22,8 +22,8 @@ class Janela(threading.Thread):
 		self.kwargs = kwargs
 		
 		#------------- variaveis internas ---------------
-		self.altura = 400 # Tamanho da Área de desenho
-		self.largura = 400
+		self.altura = 300 # Tamanho da Área de desenho
+		self.largura = 300
 		self.iter = 0 #iterador
 		self.iter_antigo = -1 #iterador
 		self.iter2 = 0
@@ -227,10 +227,10 @@ class Janela(threading.Thread):
 						     (pt2.y-pt1.y)!=0) or (
 						     (pt2.z-pt1.z)!=0):
 							#movimentos.append((pt2.x-pt1.x, pt2.y-pt1.y, pt2.z-pt1.z, codigo.lista[i].vel, num_linha))
-							self.movimentos.append(
+							'''self.movimentos.append(
 								{'pt1':pt1, 'pt2':pt2,
 								'vel':self.codigo.lista[i].vel,
-								'linha':num_linha})
+								'linha':num_linha})'''
 							self.lista.add_lin(pt1, pt2,
 									self.codigo.lista[i].vel)
 							#self.lista.cursor_x = pt1.x
@@ -298,10 +298,15 @@ class Janela(threading.Thread):
 				self.visual_gcode.selection_clear(0,tk.END)  		#limpa a linha de codigo selecionada anterior
 				self.visual_gcode.selection_set(self.iter)  		#e mostra a linha atual
 				delta = self.iter - self.iter2
-				if (delta >= 22): 					#se a linha selecionada esta proxima do final da exibicao
+				if (delta >= 18): 					#se a linha selecionada esta proxima do final da exibicao
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
 					self.iter2 = self.iter
 				self.iter_antigo = self.iter
+			
+			self.lista.cursor_x = self.pt1.x + (self.pt2.x-self.pt1.x)*0.1*(10-self.contador.get())
+			self.lista.cursor_y = self.pt1.y + (self.pt2.y-self.pt1.y)*0.1*(10-self.contador.get())
+			self.lista.cursor_z = self.pt1.z + (self.pt2.z-self.pt1.z)*0.1*(10-self.contador.get())
+			
 			self.redesenha()
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste

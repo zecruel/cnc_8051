@@ -7,6 +7,7 @@ from ezeq_maq.ponto import*
 
 import Queue
 import math
+import copy
 
 import time
 '''
@@ -18,77 +19,91 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 '''
-def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, contador, pronto):
+def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto):
 	#global contador
 	#global exec_pronto
 	while True:
 		with libera:
 			libera.wait()
 			tamanho = janela.visual_gcode.size()
-		while janela.simulacao and (janela.iter <= tamanho):
-			janela.codigo.linha = janela.visual_gcode.get(janela.iter) 	#pega a linha atual
+			pt1_anterior = ponto()
+			pt2_anterior = ponto()
+			tempo_anterior = 0
+			iter = 0
+			iter_anterior = 0
+		while janela.simulacao and (iter <= tamanho):
+			janela.codigo.linha = janela.visual_gcode.get(iter) 	#pega a linha atual
 			janela.codigo.interpreta() #e interpreta
 			#print janela.iter
 			for i in range(len(janela.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
-				pt1 = janela.codigo.lista[i].pt1
-				pt2 = janela.codigo.lista[i].pt2
+				pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
+				pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
 				delta_x = (pt2.x-pt1.x)
 				delta_y = (pt2.y-pt1.y)
 				delta_z = (pt2.z-pt1.z)
 				dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
 				tempo = dist/janela.codigo.lista[i].vel
-				
-				janela.pt1 = pt1
-				janela.pt2 = pt2
-				janela.t_cursor = tempo
-				
+				if maq_buff.get() == 0:
+					janela.pt1 = pt1
+					janela.pt2 = pt2
+					janela.t_cursor = tempo
+					janela.iter = iter
+				else:
+					janela.pt1 = pt1_anterior
+					janela.pt2 = pt2_anterior
+					janela.t_cursor = tempo_anterior
+					janela.iter = iter_anterior
 				if delta_x!=0 or delta_y!=0 or delta_z!=0:
-					mens_trans.put('executa')
+					mens_trans.put(tempo)
 					with maq_livre:
 						maq_livre.wait()
+				pt1_anterior = copy.deepcopy(pt1)
+				pt2_anterior = copy.deepcopy(pt2)
+				tempo_anterior = tempo
+				iter_anterior = iter
 					#a = mens_rec.get()
 					#mens_rec.task_done()
-			janela.iter += 1 #passa para a proxima
+			iter += 1 #passa para a proxima
 
 #comunicacao com a placa
-def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, contador, pronto):
-	temp = 0
+def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto):
+	#temp = 0
+	a=0
+	vel_sim = 10
 	while True:
 		#recepcao de mensagem
 		#simulacao
 		if contador.get() > 0:
 			contador.set(contador.get()-1)
-		elif temp > 0:
-			temp -= 1
+		elif maq_buff.get() > 0:
+			maq_buff.set(maq_buff.get()-1)
 			#verifica o status da maquina
-			if temp == 0:
+			if maq_buff.get() == 0:
 				with maq_parada:
 					maq_parada.notify()
-			if temp < 2:
+			if maq_buff.get() < 2:
 				with maq_livre:
 					maq_livre.notify()
-			if temp != 0:
-				contador.set(10) #teste
+			if maq_buff.get() != 0:
+				contador.set(int(a*vel_sim)) #teste
 			'''mens_rec.put(contador.get())
 			with pronto:
 				pronto.notify()
 			with maq_parada:
 				maq_parada.notify()'''
-		
 		#transmissao de mensagem
-		if not mens_trans.empty() and temp < 2:
+		if not mens_trans.empty() and maq_buff.get() < 2:
 			a= mens_trans.get()
 			mens_trans.task_done()
-			print a
-			if temp == 0: 
-				contador.set(10) #teste
+			#print a
+			if maq_buff.get() == 0: 
+				contador.set(int(a*vel_sim)) #teste
 				with maq_livre:
 					maq_livre.notify()
-			temp += 1
-			
-		
+			maq_buff.set(maq_buff.get()+1)
+		#print contador.get()
 		#trava.release()
-		time.sleep(0.15)
+		time.sleep(0.1)
 		
 		
 #vel_max = 2000
@@ -96,6 +111,8 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, contador, pront
 contador = ponteiro(0)
 #exec_pronto = 0
 #movimentos = []
+
+maq_buff = ponteiro(0)
 
 mens_trans = Queue.Queue()
 mens_rec  = Queue.Queue()
@@ -116,13 +133,13 @@ janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera))
 
 execut = threading.Thread(target=execucao,
 					args = (janela, libera, mens_trans, mens_rec,
-					maq_parada, maq_livre, contador, pronto))
+					maq_parada, maq_livre, maq_buff, contador, pronto))
 execut.setDaemon(True)
 execut.start()
 
 tarefa = threading.Thread(target=comunica,
 					args = (instr, mens_trans, mens_rec,
-					maq_parada, maq_livre, contador, pronto))
+					maq_parada, maq_livre, maq_buff, contador, pronto))
 tarefa.setDaemon(True)
 tarefa.start()
 

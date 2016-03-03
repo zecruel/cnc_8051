@@ -171,6 +171,10 @@ class Janela(threading.Thread):
 							command=self.exc)
 		self.b_exec.grid(row=3, column=1)
 		
+		self.b_para = tk.Button(self.raiz, text='Para',
+							command=self.para)
+		self.b_para.grid(row=5, column=1)
+		
 		#------------------------------------------
 		#Cria o menu da janela
 		#------------------------------------------
@@ -302,12 +306,18 @@ class Janela(threading.Thread):
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
 					self.iter2 = self.iter
 				self.iter_antigo = self.iter
-			
-			self.lista.cursor_x = self.pt1.x + (self.pt2.x-self.pt1.x)*0.1*(10-self.contador.get())
-			self.lista.cursor_y = self.pt1.y + (self.pt2.y-self.pt1.y)*0.1*(10-self.contador.get())
-			self.lista.cursor_z = self.pt1.z + (self.pt2.z-self.pt1.z)*0.1*(10-self.contador.get())
-			
-			self.redesenha()
+			delta_x = self.pt2.x - self.pt1.x
+			delta_y = self.pt2.y - self.pt1.y
+			delta_z = self.pt2.z - self.pt1.z
+			if delta_x!=0 or delta_y!=0 or delta_z!=0:
+				if int(self.t_cursor*10) == 0:
+					a = 0
+				else:
+					a = (int(10*self.t_cursor)-self.contador.get())/(self.t_cursor*10)
+				self.lista.cursor_x = self.pt1.x + delta_x*a
+				self.lista.cursor_y = self.pt1.y + delta_y*a
+				self.lista.cursor_z = self.pt1.z + delta_z*a
+				self.redesenha()
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
 		#print self.contador.get()
@@ -328,6 +338,10 @@ class Janela(threading.Thread):
 	def pausa(self):
 		self.continua = 0
 		self.trava.acquire() #teste
+		
+	def para(self):
+		self.continua = 0
+		self.simulacao = 0
 			
 	def exc(self):
 		self.limpa()

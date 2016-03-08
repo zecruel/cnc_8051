@@ -3,6 +3,7 @@ import threading
 import ezeq_maq.gcode
 import ezeq_maq.render
 import ezeq_maq.gui
+import ezeq_maq.convert as conv
 from ezeq_maq.ponto import*
 
 import Queue
@@ -38,23 +39,25 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 			for i in range(len(janela.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
 				pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
 				pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
+				vel = janela.codigo.lista[i].vel
 				delta_x = (pt2.x-pt1.x)
 				delta_y = (pt2.y-pt1.y)
 				delta_z = (pt2.z-pt1.z)
 				dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-				tempo = dist/janela.codigo.lista[i].vel
+				tempo = dist/vel
 				if maq_buff.get() == 0:
-					janela.pt1 = pt1
-					janela.pt2 = pt2
-					janela.t_cursor = tempo
+					#janela.pt1 = pt1
+					#janela.pt2 = pt2
+					#janela.t_cursor = tempo
 					janela.iter = iter
 				else:
-					janela.pt1 = pt1_anterior
-					janela.pt2 = pt2_anterior
-					janela.t_cursor = tempo_anterior
+					#janela.pt1 = pt1_anterior
+					#janela.pt2 = pt2_anterior
+					#janela.t_cursor = tempo_anterior
 					janela.iter = iter_anterior
 				if delta_x!=0 or delta_y!=0 or delta_z!=0:
-					mens_trans.put(tempo)
+					#mens_trans.put(tempo)
+					mens_trans.put((tempo, delta_x, delta_y, delta_z, vel))
 					with maq_livre:
 						maq_livre.wait()
 				pt1_anterior = copy.deepcopy(pt1)
@@ -66,15 +69,24 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 			iter += 1 #passa para a proxima
 
 #comunicacao com a placa
-def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto):
+def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela):
 	#temp = 0
 	a=0
-	vel_sim = 10
+	x = 0
+	y = 0
+	z = 0
+	vel = 0
+	t = 0
+	#vel_sim = 10
 	while True:
 		#recepcao de mensagem
 		#simulacao
 		if contador.get() > 0:
 			contador.set(contador.get()-1)
+			janela.pt1.x += x * total
+			janela.pt1.y += y * total
+			janela.pt1.z += z * total
+			#print janela.pt1.x, janela.pt1.y, janela.pt1.z, total
 		elif maq_buff.get() > 0:
 			maq_buff.set(maq_buff.get()-1)
 			#verifica o status da maquina
@@ -85,7 +97,9 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 				with maq_livre:
 					maq_livre.notify()
 			if maq_buff.get() != 0:
-				contador.set(int(a*vel_sim)) #teste
+				t, x, y, z, vel = a
+				total = 1.0/(int(t*vel_sim.get())+1)
+				contador.set(int(t*vel_sim.get())+1) #teste
 			'''mens_rec.put(contador.get())
 			with pronto:
 				pronto.notify()
@@ -96,8 +110,10 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 			a= mens_trans.get()
 			mens_trans.task_done()
 			#print a
-			if maq_buff.get() == 0: 
-				contador.set(int(a*vel_sim)) #teste
+			if maq_buff.get() == 0:
+				t, x, y, z, vel = a
+				total = 1.0/(int(t*vel_sim.get())+1)
+				contador.set(int(t*vel_sim.get())+1) #teste
 				with maq_livre:
 					maq_livre.notify()
 			maq_buff.set(maq_buff.get()+1)
@@ -113,6 +129,7 @@ contador = ponteiro(0)
 #movimentos = []
 
 maq_buff = ponteiro(0)
+vel_sim = ponteiro(5)
 
 mens_trans = Queue.Queue()
 mens_rec  = Queue.Queue()
@@ -129,7 +146,7 @@ figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
-janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera))
+janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, vel_sim, libera))
 
 execut = threading.Thread(target=execucao,
 					args = (janela, libera, mens_trans, mens_rec,
@@ -139,7 +156,7 @@ execut.start()
 
 tarefa = threading.Thread(target=comunica,
 					args = (instr, mens_trans, mens_rec,
-					maq_parada, maq_livre, maq_buff, contador, pronto))
+					maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela))
 tarefa.setDaemon(True)
 tarefa.start()
 

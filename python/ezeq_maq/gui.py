@@ -47,7 +47,8 @@ class Janela(threading.Thread):
 		self.figura = self.args[1]
 		self.codigo = self.args[2]
 		self.contador = self.args[3]
-		self.libera = self.args[4]
+		self.vel_sim = self.args[4]
+		self.libera = self.args[5]
 
 		#Imagem = bmp._saveBitMapPPM( )
 		self.photo = ''#PhotoImage(data= Imagem)
@@ -306,18 +307,24 @@ class Janela(threading.Thread):
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
 					self.iter2 = self.iter
 				self.iter_antigo = self.iter
-			delta_x = self.pt2.x - self.pt1.x
+			'''delta_x = self.pt2.x - self.pt1.x
 			delta_y = self.pt2.y - self.pt1.y
 			delta_z = self.pt2.z - self.pt1.z
 			if delta_x!=0 or delta_y!=0 or delta_z!=0:
-				if int(self.t_cursor*10) == 0:
+				if int(self.t_cursor*self.vel_sim.get()) == 0:
 					a = 0
 				else:
-					a = (int(10*self.t_cursor)-self.contador.get())/(self.t_cursor*10)
+					a = (int(self.vel_sim.get()*self.t_cursor)-self.contador.get())/(self.t_cursor*self.vel_sim.get())
 				self.lista.cursor_x = self.pt1.x + delta_x*a
 				self.lista.cursor_y = self.pt1.y + delta_y*a
 				self.lista.cursor_z = self.pt1.z + delta_z*a
-				self.redesenha()
+				self.redesenha()'''
+		
+		self.lista.cursor_x = self.pt1.x
+		self.lista.cursor_y = self.pt1.y
+		self.lista.cursor_z = self.pt1.z
+		self.redesenha()
+		
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
 		#print self.contador.get()

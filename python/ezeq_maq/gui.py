@@ -31,10 +31,6 @@ class Janela(threading.Thread):
 		self.executa = 0
 		self.simulacao = 0
 		
-		self.pt1 = ponto() #para calculo do cursor
-		self.pt2 = ponto()
-		self.t_cursor = 0
-		
 		self.best_view_x = 0
 		self.best_view_y = 0
 		self.best_view_z = 100
@@ -43,12 +39,12 @@ class Janela(threading.Thread):
 		self.vel_min = 10
 		self.movimentos = []
 		
-		self.lista = self.args[0]
+		self.wireframe = self.args[0]
 		self.figura = self.args[1]
 		self.codigo = self.args[2]
 		self.contador = self.args[3]
-		self.vel_sim = self.args[4]
-		self.libera = self.args[5]
+		#self.vel_sim = self.args[4]
+		self.libera = self.args[4]
 
 		#Imagem = bmp._saveBitMapPPM( )
 		self.photo = ''#PhotoImage(data= Imagem)
@@ -212,7 +208,7 @@ class Janela(threading.Thread):
 			self.visual_gcode.delete(0,tk.END)
 			with open(arquivo) as f:
 				self.movimentos = []
-				self.lista.limpa()
+				self.wireframe.limpa()
 				for num_linha, line in enumerate(f):
 					# retira os separadores de linha e os substitui por espaços
 					line = line.replace('\r', ' ') 
@@ -223,25 +219,14 @@ class Janela(threading.Thread):
 					self.codigo.linha = line
 					self.codigo.interpreta()
 					
-					#--------------------------------teste
-					
 					for i in range(len(self.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
 						pt1 = self.codigo.lista[i].pt1
 						pt2 = self.codigo.lista[i].pt2
 						if ((pt2.x-pt1.x)!=0) or (
 						     (pt2.y-pt1.y)!=0) or (
 						     (pt2.z-pt1.z)!=0):
-							#movimentos.append((pt2.x-pt1.x, pt2.y-pt1.y, pt2.z-pt1.z, codigo.lista[i].vel, num_linha))
-							'''self.movimentos.append(
-								{'pt1':pt1, 'pt2':pt2,
-								'vel':self.codigo.lista[i].vel,
-								'linha':num_linha})'''
-							self.lista.add_lin(pt1, pt2,
+							self.wireframe.add_lin(pt1, pt2,
 									self.codigo.lista[i].vel)
-							#self.lista.cursor_x = pt1.x
-							#self.lista.cursor_y = pt1.y
-							#self.lista.cursor_z = pt1.z
-					#------------------------------------------
 			self.best_view_z = (1.3*(max(self.codigo.x_max,
 							self.codigo.y_max,
 							self.codigo.z_max) - 
@@ -260,16 +245,16 @@ class Janela(threading.Thread):
 			self.best_view_y = ((self.codigo.y_max -
 					self.codigo.y_min)/2) + self.codigo.y_min
 			
-			self.lista.olho_x = self.best_view_x
-			self.lista.olho_y = self.best_view_y
+			self.wireframe.olho_x = self.best_view_x
+			self.wireframe.olho_y = self.best_view_y
 			if self.best_view_z > 0:
-				self.lista.olho_z = self.best_view_z
+				self.wireframe.olho_z = self.best_view_z
 			
-			self.lista.rot_x = int(self.rot_x.get())
-			self.lista.rot_y = int(self.rot_y.get())
-			self.lista.rot_z = int(self.rot_z.get())
+			self.wireframe.rot_x = int(self.rot_x.get())
+			self.wireframe.rot_y = int(self.rot_y.get())
+			self.wireframe.rot_z = int(self.rot_z.get())
 
-			#self.lista.v_min = self.codigo.f_min
+			#self.wireframe.v_min = self.codigo.f_min
 			
 			self.codigo.limpa()
 			self.redesenha()
@@ -307,29 +292,13 @@ class Janela(threading.Thread):
 					self.visual_gcode.yview(self.iter)		#rearranja a exibição da lista (rola automaticamente)
 					self.iter2 = self.iter
 				self.iter_antigo = self.iter
-			'''delta_x = self.pt2.x - self.pt1.x
-			delta_y = self.pt2.y - self.pt1.y
-			delta_z = self.pt2.z - self.pt1.z
-			if delta_x!=0 or delta_y!=0 or delta_z!=0:
-				if int(self.t_cursor*self.vel_sim.get()) == 0:
-					a = 0
-				else:
-					a = (int(self.vel_sim.get()*self.t_cursor)-self.contador.get())/(self.t_cursor*self.vel_sim.get())
-				self.lista.cursor_x = self.pt1.x + delta_x*a
-				self.lista.cursor_y = self.pt1.y + delta_y*a
-				self.lista.cursor_z = self.pt1.z + delta_z*a
-				self.redesenha()'''
-		
-		self.lista.cursor_x = self.pt1.x
-		self.lista.cursor_y = self.pt1.y
-		self.lista.cursor_z = self.pt1.z
 		self.redesenha()
 		
 		self.e.delete(0, tk.END) #teste
 		self.e.insert(0, self.contador.get()) #teste
 		#print self.contador.get()
 		
-		self.desenho.after(100, self.temporal) # reagenda
+		self.desenho.after(200, self.temporal) # reagenda
 	
 	
 	#------------------------------------------
@@ -366,7 +335,10 @@ class Janela(threading.Thread):
 		self.iter2 = 0
 		self.iter_antigo = -1
 		self.codigo.limpa()
-		#self.lista.limpa()
+		#self.wireframe.limpa()
+		self.wireframe.cursor_x = 0
+		self.wireframe.cursor_y = 0
+		self.wireframe.cursor_z = 0
 		self.redesenha()
 		
 	#-------------------------------------------
@@ -379,39 +351,39 @@ class Janela(threading.Thread):
 		#global lista
 		self.figura.limpa()
 		#print lista.num
-		self.lista.draw(self.figura)
+		self.wireframe.draw(self.figura)
 		Imagem = self.figura.ret_ppm()
 		self.photo = tk.PhotoImage(data= Imagem)
-		self.desenho.create_image(8, 8, image=self.photo,
+		self.desenho.create_image(12, 8, image=self.photo,
 							anchor=tk.NW)
 	
 	#-------------------------------------------
 	#Comando do slider de rotação x
 	#-------------------------------------------
 	def roda_x(self, valor):
-		self.lista.rot_x = float(valor)
+		self.wireframe.rot_x = float(valor)
 		self.redesenha()
 
 	#-------------------------------------------
 	#Comando do slider de rotação y
 	#-------------------------------------------
 	def roda_y(self, valor):
-		self.lista.rot_y = float(valor)
+		self.wireframe.rot_y = float(valor)
 		self.redesenha()
 		
 	#-------------------------------------------
 	#Comando do slider de rotação z
 	#-------------------------------------------
 	def roda_z(self, valor):
-		self.lista.rot_z = float(valor)
+		self.wireframe.rot_z = float(valor)
 		self.redesenha()
 		
 	#-------------------------------------------
 	#Comando do slider de translação x
 	#-------------------------------------------
 	def offset_x(self, valor):		
-		#self.lista.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
-		self.lista.offset_x = int(valor)/100.0
+		#self.wireframe.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
+		self.wireframe.offset_x = int(valor)/100.0
 		self.redesenha()
 		
 		
@@ -419,8 +391,8 @@ class Janela(threading.Thread):
 	#Comando do slider de translação y
 	#-------------------------------------------
 	def offset_y(self, valor):
-		#self.lista.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
-		self.lista.offset_y = int(valor)/100.0
+		#self.wireframe.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
+		self.wireframe.offset_y = int(valor)/100.0
 		self.redesenha()
 
 	#-------------------------------------------
@@ -430,15 +402,15 @@ class Janela(threading.Thread):
 		'''
 		a = int(valor)*.2*self.best_view_z +self.best_view_z
 		if a > 0:
-			self.lista.olho_z = a'''
-		self.lista.zoom = int(valor)/100.0
+			self.wireframe.olho_z = a'''
+		self.wireframe.zoom = int(valor)/100.0
 		self.redesenha()
 	
 	#-------------------------------------------
 	#Comando do slider de escala de cor
 	#-------------------------------------------
 	def escala_cor(self, valor):
-		self.lista.esc_cor = int(valor)/100.0
+		self.wireframe.esc_cor = int(valor)/100.0
 		self.redesenha()
 		
 if __name__ == "__main__":

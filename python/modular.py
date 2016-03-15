@@ -27,23 +27,33 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 			tamanho = janela.visual_gcode.size()
 			iter = 0
 			iter_anterior = 0
-		while janela.simulacao and (iter_anterior <= tamanho):
+		while janela.simulacao and (iter <= tamanho):
 			janela.codigo.linha = janela.visual_gcode.get(iter) 	#pega a linha atual
 			janela.codigo.interpreta() #e interpreta
-			for i in range(len(janela.codigo.lista)): #eh retornado linhas simples em uma lista
-				pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
-				pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
-				vel = janela.codigo.lista[i].vel
-				delta_x = (pt2.x-pt1.x)
-				delta_y = (pt2.y-pt1.y)
-				delta_z = (pt2.z-pt1.z)
-				dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-				tempo = dist/vel
+			for i in range(len(janela.codigo.lista)): #eh retornado uma lista de comandos
+				nome = janela.codigo.lista[i].__class__.__name__ #nome do comando
+				#print nome
+				if nome == 'l_usin': #se o comando for para usinagem
+					pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
+					pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
+					vel = janela.codigo.lista[i].vel
+					delta_x = (pt2.x-pt1.x)
+					delta_y = (pt2.y-pt1.y)
+					delta_z = (pt2.z-pt1.z)
+					dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
+					tempo = dist/vel
+				elif nome == 'tempo':
+					tempo = janela.codigo.lista[i].t
+					delta_x = delta_y = delta_z = 0
+					print tempo
+				else:
+					tempo = delta_x = delta_y = delta_z = 0
+					
 				if maq_buff.get() == 0:
 					janela.iter = iter
 				else:
 					janela.iter = iter_anterior
-				if delta_x!=0 or delta_y!=0 or delta_z!=0:
+				if tempo!=0:
 					#mens_trans.put(tempo)
 					mens_trans.put((tempo, delta_x, delta_y, delta_z, vel))
 					with maq_livre:
@@ -91,9 +101,9 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 		if not mens_trans.empty() and maq_buff.get() < 2:
 			a= mens_trans.get()
 			mens_trans.task_done()
-			mens = conv.maq_escreve(a[1], a[2], a[3], a[4])
+			#mens = conv.maq_escreve(a[1], a[2], a[3], a[4])
 			if janela.simulacao:
-				print mens
+				#print mens
 				if maq_buff.get() == 0:
 					t, x, y, z, vel = a
 					total = 1.0/(int(t*vel_sim.get())+1)

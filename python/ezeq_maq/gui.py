@@ -220,13 +220,15 @@ class Janela(threading.Thread):
 					self.codigo.interpreta()
 					
 					for i in range(len(self.codigo.lista)):			#cada objeto da lista interpretada eh adicionado ao desenho
-						pt1 = self.codigo.lista[i].pt1
-						pt2 = self.codigo.lista[i].pt2
-						if ((pt2.x-pt1.x)!=0) or (
-						     (pt2.y-pt1.y)!=0) or (
-						     (pt2.z-pt1.z)!=0):
-							self.wireframe.add_lin(pt1, pt2,
-									self.codigo.lista[i].vel)
+						nome = self.codigo.lista[i].__class__.__name__ #nome do comando
+						if nome == 'l_usin': #se o comando for para usinagem
+							pt1 = self.codigo.lista[i].pt1
+							pt2 = self.codigo.lista[i].pt2
+							if ((pt2.x-pt1.x)!=0) or (
+							     (pt2.y-pt1.y)!=0) or (
+							     (pt2.z-pt1.z)!=0):
+								self.wireframe.add_lin(pt1, pt2,
+										self.codigo.lista[i].vel)
 			self.best_view_z = (1.3*(max(self.codigo.x_max,
 							self.codigo.y_max,
 							self.codigo.z_max) - 

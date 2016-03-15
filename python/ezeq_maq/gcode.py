@@ -180,7 +180,12 @@ class Gcode:
 				if int(chave.group(2))==0:
 					self.movimento = 0
 					#print 'parada'
-				
+		#------ Temporiza  ---------------
+		if (comando == 4 and flag):
+			self.lista.append(ponto.tempo(self.x))
+			self.x = self.pre_x
+			flag = 0
+		
 		#------Movimentos lineares ---------------
 		if(self.estilo == 1 or self.estilo == 0):
 			self.movimento = 1
@@ -359,7 +364,6 @@ class Gcode:
 				
 			# o ultimo vertice do arco eh o ponto final, nao calculado no laço
 			self.lista.append(ponto.l_usin(ponto.ponto(pre_x,pre_y,pre_z),ponto.ponto(atual_x,atual_y,atual_z), self.velocidade))
-			
 
 if __name__ == "__main__":
 	print 'Modulo que interpreta Gcode'

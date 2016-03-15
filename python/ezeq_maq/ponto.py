@@ -31,5 +31,9 @@ class ponteiro:
 	def get(self):    return self.obj
 	def set(self, obj):      self.obj = obj
 
+class tempo:
+	def __init__(self, t = 0.0):
+		self.t = t
+
 if __name__ == "__main__":
 	print 'Modulo que define um os tipos de dados (ponto, linha, etc.)'

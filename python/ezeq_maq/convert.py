@@ -40,7 +40,7 @@ def maq_le(mens):
 	return tempo_rest
 
 def maq_escreve(x=0.0,y=0.0,z=0.0,vel=1.0):
-
+	inf = 4e-10	#um numero infinitesimal, para evitar a divisao por zero
 	dist = math.sqrt(x**2 + y**2 + z**2) # distancia a ser percorrida
 	
 	tempo = dist/vel_max

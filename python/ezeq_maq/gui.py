@@ -91,36 +91,36 @@ class Janela(threading.Thread):
 		#------------------------------------------
 		#Cria os comandos de rotação do desenho
 		#------------------------------------------
-		tk.Label(self.raiz, text='Rotacao X:').grid(row=2, column=3,
+		tk.Label(self.raiz, text='Rotacao X:').grid(row=3, column=3,
 										sticky=tk.E)
 		self.rot_x = tk.Scale(self.raiz, orient=tk.HORIZONTAL,
 						resolution=1.0, to=360.0,
 						command=self.roda_x)
-		self.rot_x.grid(row=2, column=4,
+		self.rot_x.grid(row=3, column=4,
 					sticky=tk.W+tk.E+tk.N+tk.S)
 		self.rot_x.set(60)
 		
-		tk.Label(self.raiz, text='Rotacao Y:').grid(row=3, column=3,
+		tk.Label(self.raiz, text='Rotacao Y:').grid(row=4, column=3,
 										sticky=tk.E)
 		self.rot_y = tk.Scale(self.raiz, orient=tk.HORIZONTAL,
 						resolution=1.0, to=360.0,
 						command=self.roda_y)
-		self.rot_y.grid(row=3, column=4, 
+		self.rot_y.grid(row=4, column=4, 
 					sticky=tk.W+tk.E+tk.N+tk.S)
 		
-		tk.Label(self.raiz, text='Rotacao Z:').grid(row=4, column=3,
+		tk.Label(self.raiz, text='Rotacao Z:').grid(row=5, column=3,
 										sticky=tk.E)
 		self.rot_z = tk.Scale(self.raiz, orient=tk.HORIZONTAL,
 						resolution=1.0, to=360.0,
 						command=self.roda_z)
-		self.rot_z.grid(row=4, column=4,
+		self.rot_z.grid(row=5, column=4,
 					sticky=tk.W+tk.E+tk.N+tk.S)
 		#self.rot_z.set(30)
 		
 		#------------------------------------------
 		#Cria os comandos de translação do desenho
 		#------------------------------------------
-		tk.Label(self.raiz, text='Offset X:').grid(row=2, column=5,
+		'''tk.Label(self.raiz, text='Offset X:').grid(row=2, column=5,
 									sticky=tk.E)
 		self.trans_x = tk.Scale(self.raiz, from_=-100., to=100.,
 						orient=tk.HORIZONTAL,
@@ -132,8 +132,18 @@ class Janela(threading.Thread):
 		self.trans_y = tk.Scale(self.raiz, from_=-100., to=100.,
 						orient=tk.HORIZONTAL,
 						command=self.offset_y)
-		self.trans_y.grid(row=3, column=6)
+		self.trans_y.grid(row=3, column=6)'''
+		#=============================
+		self.trans_x = tk.Scrollbar(self.raiz)
+		self.trans_x.grid(row=2, column=3, columnspan=4,rowspan=2, sticky=tk.W+tk.E+tk.N)
+		self.trans_x.config(orient=tk.HORIZONTAL, command=self.offset_x)
+		self.trans_x.set(0.4,0.6)
 		
+		self.trans_y = tk.Scrollbar(self.raiz)
+		self.trans_y.grid(row=0, column=7, columnspan=4,rowspan=2, sticky=tk.W+tk.E+tk.N+tk.S)
+		self.trans_y.config(command=self.offset_y)
+		self.trans_y.set(0.4,0.6)
+		#=========================================
 		tk.Label(self.raiz, text='Zoom:').grid(row=4, column=5,
 									sticky=tk.E)
 		self.trans_z = tk.Scale(self.raiz, from_=10, to=500,
@@ -235,8 +245,10 @@ class Janela(threading.Thread):
 							min(self.codigo.x_min,
 							self.codigo.y_min,
 							self.codigo.z_min)))
-			self.trans_x.set(0)
-			self.trans_y.set(0)
+			self.trans_x.set(0.4,0.6)
+			self.trans_y.set(0.4,0.6)
+			self.wireframe.offset_x = 0
+			self.wireframe.offset_y = 0
 			self.trans_z.set(100)
 			self.esc_cor.set(100)
 			
@@ -383,18 +395,51 @@ class Janela(threading.Thread):
 	#-------------------------------------------
 	#Comando do slider de translação x
 	#-------------------------------------------
-	def offset_x(self, valor):		
-		#self.wireframe.olho_x = int(valor)*0.1*self.best_view_x + self.best_view_x
-		self.wireframe.offset_x = int(valor)/100.0
+	def offset_x(self, *args):
+		bar = self.trans_x #eh a barra x
+		#pega a posicao alta e baixa do cursor da barra
+		a, b = bar.get()
+		a = float(a)
+		b = float(b)
+		if args[0] == 'moveto': #se for um comando de arrastar
+			c = float(args[1]) #o valor passado eh a posicao do cursor
+			delta = c-a
+			bar.set(a+delta, b+delta) #atualiza a posicao da barra
+		elif args[0] == 'scroll': #se for um comando de pulsar
+			c = float(args[1]) #o valor passado eh 1 ou -1
+			if args[2] == 'pages':
+				a += 0.1*c
+			else:
+				a += 0.01*c
+			a= max(a, 0)
+			a= min(a, 0.8)
+			bar.set(a, a + 0.2) #atualiza a posicao da barra
+		self.wireframe.offset_x = (a-0.4)/0.4 #modifica a posicao do desenho
 		self.redesenha()
-		
 		
 	#-------------------------------------------
 	#Comando do slider de translação y
 	#-------------------------------------------
-	def offset_y(self, valor):
-		#self.wireframe.olho_y = int(valor)*0.2*self.best_view_y +self.best_view_y
-		self.wireframe.offset_y = int(valor)/100.0
+	def offset_y(self, *args):
+		bar = self.trans_y #eh a barra y
+		#pega a posicao alta e baixa do cursor da barra
+		a, b = bar.get()
+		a = float(a)
+		b = float(b)
+		if args[0] == 'moveto': #se for um comando de arrastar
+			c = float(args[1]) #o valor passado eh a posicao do cursor
+			delta = c-a
+			bar.set(a+delta, b+delta) #atualiza a posicao da barra
+		elif args[0] == 'scroll': #se for um comando de pulsar
+			c = float(args[1]) #o valor passado eh 1 ou -1
+			if args[2] == 'pages':
+				a += 0.1*c
+			else:
+				a += 0.01*c
+			a= max(a, 0)
+			a= min(a, 0.8)
+			bar.set(a, a + 0.2) #atualiza a posicao da barra
+		self.wireframe.offset_y = (a-0.4)/0.4 #modifica a posicao do desenho
 		self.redesenha()
 
 	#-------------------------------------------

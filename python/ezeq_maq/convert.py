@@ -35,18 +35,18 @@ def toggleBit(int_type, offset):
 	return(int_type ^ mask)
 	
 def maq_le(mens):
-	a = conv_16_32(mens[1:3])
+	a = conv_16_32(mens[0:2])
 	tempo_rest = (a - soma)/(1000 * ms_tick)
 	return tempo_rest
 
-def maq_escreve(x=0.0,y=0.0,z=0.0,vel=1.0):
-	inf = 4e-10	#um numero infinitesimal, para evitar a divisao por zero
+def maq_usina(x=0.0,y=0.0,z=0.0,vel=1.0):
 	dist = math.sqrt(x**2 + y**2 + z**2) # distancia a ser percorrida
 	
 	tempo = dist/vel_max
-	if vel<=vel_max: tempo = dist/vel # tempo total de movimento
-	# converte em quantidade de ticks para contagem da placa
-	tick_t = int(round(tempo * 1000 * ms_tick))
+	if dist == 0: # se a distancia for zero
+		tempo = 1 # o tempo nao importa
+	elif vel<=vel_max: 
+		tempo = dist/vel # tempo total de movimento
 	
 	# velocidades de cada eixo
 	vel_x = abs(x / tempo)
@@ -60,9 +60,6 @@ def maq_escreve(x=0.0,y=0.0,z=0.0,vel=1.0):
 
 	
 	#verifica se as quantidades sao aceitaveis e corrige a contagem da placa
-	if tick_t < max_num: tick_t = tick_t + soma
-	else: tick_t = max_num + soma
-
 	if tick_x < max_num: tick_x = tick_x + soma
 	else: tick_x = max_num + soma
 
@@ -78,17 +75,32 @@ def maq_escreve(x=0.0,y=0.0,z=0.0,vel=1.0):
 	if z < 0: tick_z = tick_z + negativo
 	
 	# prepara a mensagem para envio, transformando em uma lista
-	tempo = conv_32_16(tick_t) # tempo
+	tempo = maq_tempo(tempo) # tempo
 	eixo_x = conv_32_16(tick_x) #eixo x
 	eixo_y = conv_32_16(tick_y)#eixo y
 	eixo_z = conv_32_16(tick_z) #eixo z
-	comando = [1]	# comando de execucao
-	mens = comando + tempo + eixo_x + eixo_y + eixo_z
+	
+	mens = tempo + eixo_x + eixo_y + eixo_z
 	
 	return mens
 
+def maq_tempo(tempo):
+	#o tempo em segundos eh convertido em quant de ticks p/ contagem da placa
+	tick_t = int(round(tempo * 1000 * ms_tick))
+	
+	#verifica se as quantidades sao aceitaveis e corrige a contagem da placa
+	if tick_t < max_num: tick_t = tick_t + soma
+	else: tick_t = max_num + soma
+	
+	# prepara a mensagem para envio, transformando em uma lista
+	t = conv_32_16(tick_t) # tempo
+	
+	return t
+
 if __name__ == "__main__":
 	print 'Modulo de funcoes de conversao de tipos de dados'
-	mens = maq_escreve( 10, 20, 30, 2)
+	mens = maq_usina( 0, 0, 0, 0)
+	print mens[2:]
+	mens = maq_usina( 10, 20, 30, 2)
 	print mens
 	print maq_le(mens)

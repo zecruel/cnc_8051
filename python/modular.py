@@ -44,10 +44,10 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 					tempo = dist/vel
 				elif nome == 'tempo':
 					tempo = janela.codigo.lista[i].t
-					delta_x = delta_y = delta_z = 0
-					print tempo
+					delta_x = delta_y = delta_z = vel =0
+					#print tempo
 				else:
-					tempo = delta_x = delta_y = delta_z = 0
+					tempo = delta_x = delta_y = delta_z = vel = 0
 					
 				if maq_buff.get() == 0:
 					janela.iter = iter
@@ -101,9 +101,20 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 		if not mens_trans.empty() and maq_buff.get() < 2:
 			a= mens_trans.get()
 			mens_trans.task_done()
-			#mens = conv.maq_escreve(a[1], a[2], a[3], a[4])
+			config = conv.maq_usina(a[1], a[2], a[3], a[4]) #converte p/ parametros de maquina
+			if a[4] != 0: # se tiver usinagem
+				comando = [1] #manda executar
+				mens = comando + config
+			elif a[0] != 0: # se não usinagem, mas tiver tempo
+				comando = [1] #manda executar
+				#recalcula e substitui o parametro de tempo
+				mens = comando + conv.maq_tempo(a[0]) + config[2:]
+				#print conv.maq_le(mens[1:])
+			else:
+				mens = []
+			
 			if janela.simulacao:
-				#print mens
+				print mens
 				if maq_buff.get() == 0:
 					t, x, y, z, vel = a
 					total = 1.0/(int(t*vel_sim.get())+1)

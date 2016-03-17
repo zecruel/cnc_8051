@@ -1,0 +1,11 @@
+%messetest
+G90 
+t4 m6
+f1000
+g0 x200 y170
+g1 z0
+g2 y230 j40 z24
+g2 y170 j-40 z70
+g3 y230 j40 z24
+g3 y170 j-40 z0
+m30

@@ -1,0 +1,14 @@
+(Helical interpolation sample)
+%
+N10 G90 G0 X0 Y0 Z0
+G02 X0 Y0 R50 Z10 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z20 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z30 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z40 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z50 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z60 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z70 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z80 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z90 ( a circle in XY plane with Z motion )
+G02 X0 Y0 R50 Z100 ( a circle in XY plane with Z motion )
+M30

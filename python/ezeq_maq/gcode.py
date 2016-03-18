@@ -179,6 +179,9 @@ class Gcode:
 			elif (chave.group(1) == 'm') or (chave.group(1) == 'M'):
 				if int(chave.group(2))==0:
 					self.movimento = 0
+				if int(chave.group(2))==6: #se eh solicitado uma toca de ferramenta
+					self.movimento = 0
+					self.lista.append(ponto.espera('troca ferramenta')) #insere uma condicao suspensiva
 					#print 'parada'
 		#------ Temporiza  ---------------
 		if (comando == 4 and flag):

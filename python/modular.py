@@ -30,6 +30,10 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 		while janela.simulacao and (iter <= tamanho):
 			janela.codigo.linha = janela.visual_gcode.get(iter) 	#pega a linha atual
 			janela.codigo.interpreta() #e interpreta
+			if maq_buff.get() == 0:
+				janela.iter = iter
+			else:
+				janela.iter = iter_anterior
 			for i in range(len(janela.codigo.lista)): #eh retornado uma lista de comandos
 				nome = janela.codigo.lista[i].__class__.__name__ #nome do comando
 				#print nome
@@ -46,13 +50,17 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 					tempo = janela.codigo.lista[i].t
 					delta_x = delta_y = delta_z = vel =0
 					#print tempo
+				elif nome =='espera':
+					tempo = delta_x = delta_y = delta_z = vel = 0
+					print 'motivo espera:', janela.codigo.lista[i].tipo
+					with maq_parada:
+						maq_parada.wait()
+					# a condicao 'libera' poderah ser substituida neste caso
+					with libera:
+						libera.wait()
 				else:
 					tempo = delta_x = delta_y = delta_z = vel = 0
-					
-				if maq_buff.get() == 0:
-					janela.iter = iter
-				else:
-					janela.iter = iter_anterior
+				
 				if tempo!=0:
 					#mens_trans.put(tempo)
 					mens_trans.put((tempo, delta_x, delta_y, delta_z, vel))
@@ -84,19 +92,13 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 				janela.wireframe.cursor_z += z * total
 			elif maq_buff.get() > 0:
 				maq_buff.set(maq_buff.get()-1)
-				#verifica o status da maquina
-				if maq_buff.get() == 0:
-					with maq_parada:
-						maq_parada.notify()
-				if maq_buff.get() < 2:
-					with maq_livre:
-						maq_livre.notify()
 				if maq_buff.get() != 0:
 					t, x, y, z, vel = a
 					total = 1.0/(int(t*vel_sim.get())+1)
 					contador.set(int(t*vel_sim.get())+1) #teste
 		else:
 			pass
+		
 		#transmissao de mensagem
 		if not mens_trans.empty() and maq_buff.get() < 2:
 			a= mens_trans.get()
@@ -125,12 +127,21 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 			else:
 				pass
 		#trava.release()
+		
+		#verifica o status da maquina
+		if maq_buff.get() == 0 and contador.get() == 0:
+			with maq_parada:
+				maq_parada.notify()
+		if maq_buff.get() < 2:
+			with maq_livre:
+				maq_livre.notify()
+		
 		time.sleep(0.1)
 
 contador = ponteiro(0)
 
 maq_buff = ponteiro(0)
-vel_sim = ponteiro(5)
+vel_sim = ponteiro(1)
 
 mens_trans = Queue.Queue()
 mens_rec  = Queue.Queue()

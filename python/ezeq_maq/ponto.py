@@ -34,6 +34,10 @@ class ponteiro:
 class tempo:
 	def __init__(self, t = 0.0):
 		self.t = t
+		
+class espera:
+	def __init__(self, tipo = 'suspende'):
+		self.tipo = tipo
 
 if __name__ == "__main__":
 	print 'Modulo que define um os tipos de dados (ponto, linha, etc.)'

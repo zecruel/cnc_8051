@@ -326,8 +326,10 @@ class Janela(threading.Thread):
 			self.libera.notify()
 		
 	def pausa(self):
-		self.continua = 0
-		self.trava.acquire() #teste
+		# ========testa a troca de ferramenta
+		with self.libera:
+			self.libera.notify()
+		#=========================
 		
 	def para(self):
 		self.continua = 0

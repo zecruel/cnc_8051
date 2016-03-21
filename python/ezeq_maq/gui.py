@@ -45,6 +45,7 @@ class Janela(threading.Thread):
 		self.contador = self.args[3]
 		#self.vel_sim = self.args[4]
 		self.libera = self.args[4]
+		self.e_parar = self.args[5]
 
 		#Imagem = bmp._saveBitMapPPM( )
 		self.photo = ''#PhotoImage(data= Imagem)
@@ -168,19 +169,23 @@ class Janela(threading.Thread):
 		#------------------------------------------
 		self.b_simula = tk.Button(self.raiz, text='Simula GCODE',
 							command=self.simula)
-		self.b_simula.grid(row=2, column=1)
-		
-		self.b_pausa = tk.Button(self.raiz, text='Pausa',
-							command=self.pausa)
-		self.b_pausa.grid(row=4, column=1)
+		self.b_simula.grid(row=2, column=0)
 		
 		self.b_exec = tk.Button(self.raiz, text='Executa',
 							command=self.exc)
-		self.b_exec.grid(row=3, column=1)
+		self.b_exec.grid(row=3, column=0)
+		
+		self.b_pausa = tk.Button(self.raiz, text='Pausa',
+							command=self.pausa)
+		self.b_pausa.grid(row=2, column=1)
+		
+		self.b_continua = tk.Button(self.raiz, text='Continua',
+							command=self.vai)
+		self.b_continua.grid(row=3, column=1)
 		
 		self.b_para = tk.Button(self.raiz, text='Para',
 							command=self.para)
-		self.b_para.grid(row=5, column=1)
+		self.b_para.grid(row=4, column=1)
 		
 		#------------------------------------------
 		#Cria o menu da janela
@@ -219,6 +224,8 @@ class Janela(threading.Thread):
 			with open(arquivo) as f:
 				self.movimentos = []
 				self.wireframe.limpa()
+				self.wireframe.add_pt(ponto(0,0,0),0) #o primeiro ponto eh sempre zero
+				
 				for num_linha, line in enumerate(f):
 					# retira os separadores de linha e os substitui por espaços
 					line = line.replace('\r', ' ') 
@@ -237,7 +244,8 @@ class Janela(threading.Thread):
 							if ((pt2.x-pt1.x)!=0) or (
 							     (pt2.y-pt1.y)!=0) or (
 							     (pt2.z-pt1.z)!=0):
-								self.wireframe.add_lin(pt1, pt2,
+								#adiciona somente o ultimo ponto ao desenho
+								self.wireframe.add_pt(pt2,
 										self.codigo.lista[i].vel)
 			self.best_view_z = (1.3*(max(self.codigo.x_max,
 							self.codigo.y_max,
@@ -272,6 +280,7 @@ class Janela(threading.Thread):
 			
 			self.codigo.limpa()
 			self.redesenha()
+			#print self.wireframe.list_princ.buffer_info()
 	
 	#------------------------------------------
 	#Comando de fechar arquivo
@@ -322,10 +331,17 @@ class Janela(threading.Thread):
 		self.limpa()
 		self.continua = 1
 		self.simulacao = 1
+		self.wireframe.cursor_x += 0
+		self.wireframe.cursor_y += 0
+		self.wireframe.cursor_z += 0
 		with self.libera:
 			self.libera.notify()
 		
 	def pausa(self):
+		self.continua = 0
+		
+	def vai(self):
+		self.continua = 1
 		# ========testa a troca de ferramenta
 		with self.libera:
 			self.libera.notify()
@@ -334,7 +350,7 @@ class Janela(threading.Thread):
 	def para(self):
 		self.continua = 0
 		self.simulacao = 0
-			
+		self.e_parar.set()
 	def exc(self):
 		self.limpa()
 		self.executa=1

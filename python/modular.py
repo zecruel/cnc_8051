@@ -20,14 +20,14 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 '''
-def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto):
+def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto, parar):
 	while True:
 		with libera:
 			libera.wait()
 			tamanho = janela.visual_gcode.size()
 			iter = 0
 			iter_anterior = 0
-		while janela.simulacao and (iter <= tamanho):
+		while janela.simulacao and (iter <= tamanho) and not parar.is_set():
 			janela.codigo.linha = janela.visual_gcode.get(iter) 	#pega a linha atual
 			janela.codigo.interpreta() #e interpreta
 			if maq_buff.get() == 0:
@@ -35,44 +35,49 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 			else:
 				janela.iter = iter_anterior
 			for i in range(len(janela.codigo.lista)): #eh retornado uma lista de comandos
-				nome = janela.codigo.lista[i].__class__.__name__ #nome do comando
-				#print nome
-				if nome == 'l_usin': #se o comando for para usinagem
-					pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
-					pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
-					vel = janela.codigo.lista[i].vel
-					delta_x = (pt2.x-pt1.x)
-					delta_y = (pt2.y-pt1.y)
-					delta_z = (pt2.z-pt1.z)
-					dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-					tempo = dist/vel
-				elif nome == 'tempo':
-					tempo = janela.codigo.lista[i].t
-					delta_x = delta_y = delta_z = vel =0
-					#print tempo
-				elif nome =='espera':
-					tempo = delta_x = delta_y = delta_z = vel = 0
-					print 'motivo espera:', janela.codigo.lista[i].tipo
-					with maq_parada:
-						maq_parada.wait()
-					# a condicao 'libera' poderah ser substituida neste caso
-					with libera:
-						libera.wait()
-				else:
-					tempo = delta_x = delta_y = delta_z = vel = 0
-				
-				if tempo!=0:
-					#mens_trans.put(tempo)
-					mens_trans.put((tempo, delta_x, delta_y, delta_z, vel))
-					with maq_livre:
-						maq_livre.wait()
-				iter_anterior = iter
-					#a = mens_rec.get()
-					#mens_rec.task_done()
+				if not parar.is_set():
+					nome = janela.codigo.lista[i].__class__.__name__ #nome do comando
+					#print nome
+					if nome == 'l_usin': #se o comando for para usinagem
+						pt1 = copy.deepcopy(janela.codigo.lista[i].pt1)
+						pt2 = copy.deepcopy(janela.codigo.lista[i].pt2)
+						vel = janela.codigo.lista[i].vel
+						delta_x = (pt2.x-pt1.x)
+						delta_y = (pt2.y-pt1.y)
+						delta_z = (pt2.z-pt1.z)
+						dist = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
+						tempo = dist/vel
+					elif nome == 'tempo':
+						tempo = janela.codigo.lista[i].t
+						delta_x = delta_y = delta_z = vel =0
+						#print tempo
+					elif nome =='espera':
+						tempo = delta_x = delta_y = delta_z = vel = 0
+						print 'motivo espera:', janela.codigo.lista[i].tipo
+						with maq_parada:
+							maq_parada.wait()
+						# a condicao 'libera' poderah ser substituida neste caso
+						with libera:
+							libera.wait()
+					else:
+						tempo = delta_x = delta_y = delta_z = vel = 0
+					
+					if tempo!=0:
+						#mens_trans.put(tempo)
+						mens_trans.put((tempo, delta_x, delta_y, delta_z, vel))
+						with maq_livre:
+							maq_livre.wait()
+					iter_anterior = iter
+						#a = mens_rec.get()
+						#mens_rec.task_done()
+				else: break
 			iter += 1 #passa para a proxima
+		else:
+			parar.clear()
+			print 'parada'
 
 #comunicacao com a placa
-def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela):
+def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela, parar):
 	#temp = 0
 	a=0
 	x = 0
@@ -83,7 +88,7 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 	#vel_sim = 10
 	while True:
 		#recepcao de mensagem
-		if janela.simulacao:
+		if janela.simulacao and janela.continua:
 			#simulacao
 			if contador.get() > 0:
 				contador.set(contador.get()-1)
@@ -125,17 +130,28 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 						maq_livre.notify()
 				maq_buff.set(maq_buff.get()+1)
 			else:
+				# ============== manda mensagem de execucao
 				pass
 		#trava.release()
 		
 		#verifica o status da maquina
-		if maq_buff.get() == 0 and contador.get() == 0:
+		if janela.continua:
+			if maq_buff.get() == 0 and contador.get() == 0:
+				with maq_parada:
+					maq_parada.notify()
+			if maq_buff.get() < 2:
+				with maq_livre:
+					maq_livre.notify()
+		else:
+			#==================== manda sinal de pausa
+			pass
+		if parar.is_set():
+			#==================== manda sinal de parar
+			contador.set(0)
 			with maq_parada:
 				maq_parada.notify()
-		if maq_buff.get() < 2:
 			with maq_livre:
 				maq_livre.notify()
-		
 		time.sleep(0.1)
 
 contador = ponteiro(0)
@@ -158,16 +174,16 @@ figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
-janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera))
+janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera, parar))
 
 execut = threading.Thread(target=execucao,
 					args = (janela, libera, mens_trans, mens_rec,
-					maq_parada, maq_livre, maq_buff, contador, pronto))
+					maq_parada, maq_livre, maq_buff, contador, pronto, parar))
 execut.setDaemon(True)
 execut.start()
 
 tarefa = threading.Thread(target=comunica,
 					args = (instr, mens_trans, mens_rec,
-					maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela))
+					maq_parada, maq_livre, maq_buff, contador, vel_sim, pronto, janela, parar))
 tarefa.setDaemon(True)
 tarefa.start()

@@ -61,14 +61,11 @@ class wireframe:
 		self.list_princ = array.array('f') # reinicia a lista
 		self.num = 0 # zera os itens na lista principal
 		
-	def add_lin(self, pt1, pt2, vel):
-		''' adiciona linha a lista principal '''
+	def add_pt(self, pt1, vel):
+		''' adiciona ponto a lista principal '''
 		self.list_princ.append(pt1.x)
 		self.list_princ.append(pt1.y)
 		self.list_princ.append(pt1.z)
-		self.list_princ.append(pt2.x)
-		self.list_princ.append(pt2.y)
-		self.list_princ.append(pt2.z)
 		self.list_princ.append(vel)
 		self.num += 1
 	
@@ -93,22 +90,27 @@ class wireframe:
 		zy = self.cos[a]*self.sen[c] - self.sen[a]*self.sen[b]*self.cos[c] #calc zy constant
 		zz = self.cos[b]*self.cos[c] #calc zz constant
 		
-		for i in range(self.num):
-			x1 = self.list_princ[i*7] * xx + self.list_princ[i*7+1] * xy + self.list_princ[i*7+2] * xz + self.olho_x
-			y1 = self.list_princ[i*7] * yx + self.list_princ[i*7+1] * yy + self.list_princ[i*7+2] * yz + self.olho_y
-			z1 = self.list_princ[i*7] * zx + self.list_princ[i*7+1] * zy + self.list_princ[i*7+2] * zz - self.olho_z
+		#transforma e desenha a lista de movimentos
+		#considera o ponto inicial  de cada linha -> pt final da anterior
+		for i in range(self.num-1):
+			if i ==0:
+				x1 = self.list_princ[i] * xx + self.list_princ[i+1] * xy + self.list_princ[i+2] * xz + self.olho_x
+				y1 = self.list_princ[i] * yx + self.list_princ[i+1] * yy + self.list_princ[i+2] * yz + self.olho_y
+				z1 = self.list_princ[i] * zx + self.list_princ[i+1] * zy + self.list_princ[i+2] * zz - self.olho_z
+				p1x = int(self.zoom*((x1 / (z1 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
+				p1y = int(self.zoom*((y1 / (z1+ inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
 			
-			x2 = self.list_princ[i*7+3] * xx + self.list_princ[i*7+4] * xy + self.list_princ[i*7+5] * xz + self.olho_x
-			y2 = self.list_princ[i*7+3] * yx + self.list_princ[i*7+4] * yy + self.list_princ[i*7+5] * yz + self.olho_y
-			z2 = self.list_princ[i*7+3] * zx + self.list_princ[i*7+4] * zy + self.list_princ[i*7+5] * zz - self.olho_z
-			
-			p1x = int(self.zoom*((x1 / (z1 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
-			p1y = int(self.zoom*((y1 / (z1+ inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
+			x2 = self.list_princ[i*4+4] * xx + self.list_princ[i*4+5] * xy + self.list_princ[i*4+6] * xz + self.olho_x
+			y2 = self.list_princ[i*4+4] * yx + self.list_princ[i*4+5] * yy + self.list_princ[i*4+6] * yz + self.olho_y
+			z2 = self.list_princ[i*4+4] * zx + self.list_princ[i*4+5] * zy + self.list_princ[i*4+6] * zz - self.olho_z
 			
 			p2x = int(self.zoom*((x2 / (z2 + inf)) * img_w) + img_w/2 + self.zoom*self.offset_x*img_w)
 			p2y = int(self.zoom*((y2 / (z2 + inf)) * img_h) + img_h/2 + self.zoom*self.offset_y*img_h)
 			
-			img.line(p1x, p1y, p2x, p2y, self.rgb(self.list_princ[i*7+6]))
+			img.line(p1x, p1y, p2x, p2y, self.rgb(self.list_princ[i*4+7]))
+			
+			p1x = p2x
+			p1y = p2y
 		
 		#desenha os eixos para orientacao
 		cor_eixo = [(255,0,0), (0,255,0), (0,0,255)]

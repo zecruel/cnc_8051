@@ -46,6 +46,7 @@ class Janela(threading.Thread):
 		#self.vel_sim = self.args[4]
 		self.libera = self.args[4]
 		self.e_parar = self.args[5]
+		self.mens = self.args[6]
 
 		#Imagem = bmp._saveBitMapPPM( )
 		self.photo = ''#PhotoImage(data= Imagem)
@@ -318,7 +319,7 @@ class Janela(threading.Thread):
 		self.redesenha()
 		
 		self.e.delete(0, tk.END) #teste
-		self.e.insert(0, self.contador.get()) #teste
+		self.e.insert(0, self.mens.get()) #teste
 		#print self.contador.get()
 		
 		self.desenho.after(200, self.temporal) # reagenda

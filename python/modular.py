@@ -20,7 +20,7 @@ logging.basicConfig(filename='log_filename.txt',
 #logging.debug('This is a log message.')
 #-----------------------------------------------------
 '''
-def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto, parar):
+def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, contador, pronto, parar, gui_mens):
 	while True:
 		with libera:
 			libera.wait()
@@ -53,12 +53,13 @@ def execucao(janela, libera, mens_trans, mens_rec, maq_parada, maq_livre, maq_bu
 						#print tempo
 					elif nome =='espera':
 						tempo = delta_x = delta_y = delta_z = vel = 0
-						print 'motivo espera:', janela.codigo.lista[i].tipo
+						gui_mens.set('motivo espera: '+ janela.codigo.lista[i].tipo)
 						with maq_parada:
 							maq_parada.wait()
 						# a condicao 'libera' poderah ser substituida neste caso
 						with libera:
 							libera.wait()
+						gui_mens.set('Maq em execucao')
 					else:
 						tempo = delta_x = delta_y = delta_z = vel = 0
 					
@@ -148,6 +149,7 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 		if parar.is_set():
 			#==================== manda sinal de parar
 			contador.set(0)
+			maq_buff.set(0)
 			with maq_parada:
 				maq_parada.notify()
 			with maq_livre:
@@ -158,6 +160,7 @@ contador = ponteiro(0)
 
 maq_buff = ponteiro(0)
 vel_sim = ponteiro(1)
+gui_mens = ponteiro('Maq parada')
 
 mens_trans = Queue.Queue()
 mens_rec  = Queue.Queue()
@@ -174,11 +177,13 @@ figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
-janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador, libera, parar))
+janela = ezeq_maq.gui.Janela(args=(lista, figura, codigo, contador,
+						libera, parar, gui_mens))
 
 execut = threading.Thread(target=execucao,
 					args = (janela, libera, mens_trans, mens_rec,
-					maq_parada, maq_livre, maq_buff, contador, pronto, parar))
+					maq_parada, maq_livre, maq_buff, contador, 
+					pronto, parar, gui_mens))
 execut.setDaemon(True)
 execut.start()
 

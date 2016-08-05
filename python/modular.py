@@ -113,7 +113,7 @@ def comunica(instr, mens_trans, mens_rec, maq_parada, maq_livre, maq_buff, conta
 			if a[4] != 0: # se tiver usinagem
 				comando = [1] #manda executar
 				mens = comando + config
-			elif a[0] != 0: # se n„o usinagem, mas tiver tempo
+			elif a[0] != 0: # se n√£o usinagem, mas tiver tempo
 				comando = [1] #manda executar
 				#recalcula e substitui o parametro de tempo
 				mens = comando + conv.maq_tempo(a[0]) + config[2:]
@@ -173,7 +173,8 @@ pronto = threading.Condition()
 maq_parada = threading.Condition()
 maq_livre = threading.Condition()
 
-figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
+#figura = ezeq_maq.render.bitmap(300,300,(255,255,255))
+figura = ''
 lista = ezeq_maq.render.wireframe()
 codigo = ezeq_maq.gcode.Gcode()
 	
